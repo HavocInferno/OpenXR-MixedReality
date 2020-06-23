@@ -107,11 +107,11 @@ namespace {
 
     } // namespace CubeShader
 
-    struct CubeGraphics : sample::IGraphicsPluginD3D11 {
-        ID3D11Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) override {
+    struct CubeGraphics : sample::IGraphicsPluginD3D12 {
+        ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) override {
             const winrt::com_ptr<IDXGIAdapter1> adapter = sample::dx::GetAdapter(adapterLuid);
 
-            sample::dx::CreateD3D11DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
+            sample::dx::CreateD3D12DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
 
             InitializeD3DResources();
 
@@ -276,7 +276,7 @@ namespace {
 } // namespace
 
 namespace sample {
-    std::unique_ptr<sample::IGraphicsPluginD3D11> CreateCubeGraphics() {
+    std::unique_ptr<sample::IGraphicsPluginD3D12> CreateCubeGraphics() {
         return std::make_unique<CubeGraphics>();
     }
 } // namespace sample

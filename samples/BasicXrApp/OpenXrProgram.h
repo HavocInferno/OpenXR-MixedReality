@@ -30,11 +30,11 @@ namespace sample {
         virtual void Run() = 0;
     };
 
-    struct IGraphicsPluginD3D11 {
-        virtual ~IGraphicsPluginD3D11() = default;
+    struct IGraphicsPluginD3D12 {
+        virtual ~IGraphicsPluginD3D12() = default;
 
         // Create an instance of this graphics api for the provided instance and systemId.
-        virtual ID3D11Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) = 0;
+        virtual ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) = 0;
 
         // List of color pixel formats supported by this app.
         virtual const std::vector<DXGI_FORMAT>& SupportedColorFormats() const = 0;
@@ -51,7 +51,7 @@ namespace sample {
                                 const std::vector<const sample::Cube*>& cubes) = 0;
     };
 
-    std::unique_ptr<IGraphicsPluginD3D11> CreateCubeGraphics();
-    std::unique_ptr<IOpenXrProgram> CreateOpenXrProgram(std::string applicationName, std::unique_ptr<IGraphicsPluginD3D11> graphicsPlugin);
+    std::unique_ptr<IGraphicsPluginD3D12> CreateCubeGraphics();
+    std::unique_ptr<IOpenXrProgram> CreateOpenXrProgram(std::string applicationName, std::unique_ptr<IGraphicsPluginD3D12> graphicsPlugin);
 
 } // namespace sample

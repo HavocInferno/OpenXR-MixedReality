@@ -20,7 +20,7 @@
 
 namespace {
     struct ImplementOpenXrProgram : sample::IOpenXrProgram {
-        ImplementOpenXrProgram(std::string applicationName, std::unique_ptr<sample::IGraphicsPluginD3D11> graphicsPlugin)
+        ImplementOpenXrProgram(std::string applicationName, std::unique_ptr<sample::IGraphicsPluginD3D12> graphicsPlugin)
             : m_applicationName(std::move(applicationName))
             , m_graphicsPlugin(std::move(graphicsPlugin)) {
         }
@@ -235,8 +235,8 @@ namespace {
             CHECK(m_session.Get() == XR_NULL_HANDLE);
 
             // Create the D3D11 device for the adapter associated with the system.
-            XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR}; //TODO: dx12
-            CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
+            XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR}; //TODO: dx12
+            CHECK_XRCMD(m_extensions.xrGetD3D12GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
 
             // Create a list of feature levels which are both supported by the OpenXR runtime and this application.
             std::vector<D3D_FEATURE_LEVEL> featureLevels = {D3D_FEATURE_LEVEL_12_1,
@@ -251,9 +251,9 @@ namespace {
                                 featureLevels.end());
             CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
 
-            ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels); //TODO: dx12
+            ID3D12Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels); //TODO: dx12
 
-            XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR}; //TODO: dx12
+            XrGraphicsBindingD3D12KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR}; //TODO: dx12
             graphicsBinding.device = device;
 
             XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
@@ -393,8 +393,8 @@ namespace {
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
         }
 
-        struct SwapchainD3D11;
-        SwapchainD3D11 CreateSwapchainD3D11(XrSession session,
+        struct SwapchainD3D12;
+        SwapchainD3D12 CreateSwapchainD3D11(XrSession session,
                                             DXGI_FORMAT format,
                                             uint32_t width,
                                             uint32_t height,
@@ -402,7 +402,7 @@ namespace {
                                             uint32_t sampleCount,
                                             XrSwapchainCreateFlags createFlags,
                                             XrSwapchainUsageFlags usageFlags) {
-            SwapchainD3D11 swapchain;
+            SwapchainD3D12 swapchain;
             swapchain.Format = format;
             swapchain.Width = width;
             swapchain.Height = height;
@@ -751,8 +751,8 @@ namespace {
             }
 
             // Swapchain is acquired, rendered to, and released together for all views as texture array
-            const SwapchainD3D11& colorSwapchain = m_renderResources->ColorSwapchain;
-            const SwapchainD3D11& depthSwapchain = m_renderResources->DepthSwapchain;
+            const SwapchainD3D12& colorSwapchain = m_renderResources->ColorSwapchain;
+            const SwapchainD3D12& depthSwapchain = m_renderResources->DepthSwapchain;
 
             // Use the full range of recommended image size to achieve optimum resolution
             const XrRect2Di imageRect = {{0, 0}, {(int32_t)colorSwapchain.Width, (int32_t)colorSwapchain.Height}};
@@ -836,7 +836,7 @@ namespace {
         constexpr static uint32_t m_stereoViewCount = 2; // PRIMARY_STEREO view configuration always has 2 views
 
         const std::string m_applicationName;
-        const std::unique_ptr<sample::IGraphicsPluginD3D11> m_graphicsPlugin;
+        const std::unique_ptr<sample::IGraphicsPluginD3D12> m_graphicsPlugin;
 
         xr::InstanceHandle m_instance;
         xr::SessionHandle m_session;
@@ -876,21 +876,21 @@ namespace {
         XrEnvironmentBlendMode m_environmentBlendMode{};
         xr::math::NearFar m_nearFar{};
 
-        struct SwapchainD3D11 {
+        struct SwapchainD3D12 {
             xr::SwapchainHandle Handle;
             DXGI_FORMAT Format{DXGI_FORMAT_UNKNOWN};
             uint32_t Width{0};
             uint32_t Height{0};
             uint32_t ArraySize{0};
-            std::vector<XrSwapchainImageD3D11KHR> Images;
+            std::vector<XrSwapchainImageD3D12KHR> Images;
         };
 
         struct RenderResources {
             XrViewState ViewState{XR_TYPE_VIEW_STATE};
             std::vector<XrView> Views;
             std::vector<XrViewConfigurationView> ConfigViews;
-            SwapchainD3D11 ColorSwapchain;
-            SwapchainD3D11 DepthSwapchain;
+            SwapchainD3D12 ColorSwapchain;
+            SwapchainD3D12 DepthSwapchain;
             std::vector<XrCompositionLayerProjectionView> ProjectionLayerViews;
             std::vector<XrCompositionLayerDepthInfoKHR> DepthInfoViews;
         };
@@ -904,7 +904,7 @@ namespace {
 
 namespace sample {
     std::unique_ptr<sample::IOpenXrProgram> CreateOpenXrProgram(std::string applicationName,
-                                                                std::unique_ptr<sample::IGraphicsPluginD3D11> graphicsPlugin) {
+                                                                std::unique_ptr<sample::IGraphicsPluginD3D12> graphicsPlugin) {
         return std::make_unique<ImplementOpenXrProgram>(std::move(applicationName), std::move(graphicsPlugin));
     }
 } // namespace sample
