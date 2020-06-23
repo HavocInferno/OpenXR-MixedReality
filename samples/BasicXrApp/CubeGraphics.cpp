@@ -111,7 +111,7 @@ namespace {
         ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) override {
             const winrt::com_ptr<IDXGIAdapter1> adapter = sample::dx::GetAdapter(adapterLuid);
 
-            sample::dx::CreateD3D12DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
+            sample::dx::CreateD3D11DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
 
             InitializeD3DResources();
 
@@ -262,7 +262,7 @@ namespace {
         }
 
     private:
-        winrt::com_ptr<ID3D11Device> m_device;
+        winrt::com_ptr<ID3D12Device> m_device;
         winrt::com_ptr<ID3D11DeviceContext> m_deviceContext;
         winrt::com_ptr<ID3D11VertexShader> m_vertexShader;
         winrt::com_ptr<ID3D11PixelShader> m_pixelShader;

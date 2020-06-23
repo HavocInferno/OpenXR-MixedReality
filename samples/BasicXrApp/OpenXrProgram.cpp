@@ -97,8 +97,8 @@ namespace {
                 return false;
             };
 
-            // D3D11 extension is required for this sample, so check if it's supported.
-            CHECK(EnableExtentionIfSupported(XR_KHR_D3D11_ENABLE_EXTENSION_NAME));
+            // D3D12 extension is required for this sample, so check if it's supported.
+            CHECK(EnableExtentionIfSupported(XR_KHR_D3D12_ENABLE_EXTENSION_NAME));
 
             // Additional optional extensions for enhanced functionality. Track whether enabled in m_optionalExtensions.
             m_optionalExtensions.DepthExtensionSupported = EnableExtentionIfSupported(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
