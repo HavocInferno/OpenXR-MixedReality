@@ -33,6 +33,7 @@ namespace {
             do {
                 InitializeSystem();
                 InitializeSession();
+                //TODO: Initialize other DX12 stuff?
 
                 while (true) {
                     bool exitRenderLoop = false;
@@ -234,7 +235,7 @@ namespace {
             CHECK(m_session.Get() == XR_NULL_HANDLE);
 
             // Create the D3D11 device for the adapter associated with the system.
-            XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
+            XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR}; //TODO: dx12
             CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
 
             // Create a list of feature levels which are both supported by the OpenXR runtime and this application.
@@ -243,16 +244,16 @@ namespace {
                                                             D3D_FEATURE_LEVEL_11_1,
                                                             D3D_FEATURE_LEVEL_11_0,
                                                             D3D_FEATURE_LEVEL_10_1,
-                                                            D3D_FEATURE_LEVEL_10_0};
+                                                            D3D_FEATURE_LEVEL_10_0}; //TODO: dx11/12 only?
             featureLevels.erase(std::remove_if(featureLevels.begin(),
                                                featureLevels.end(),
                                                [&](D3D_FEATURE_LEVEL fl) { return fl < graphicsRequirements.minFeatureLevel; }),
                                 featureLevels.end());
             CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
 
-            ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
+            ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels); //TODO: dx12
 
-            XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
+            XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR}; //TODO: dx12
             graphicsBinding.device = device;
 
             XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
@@ -333,14 +334,14 @@ namespace {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
             CHECK(m_renderResources == nullptr);
 
-            m_renderResources = std::make_unique<RenderResources>();
+            m_renderResources = std::make_unique<RenderResources>(); //TODO: dx12
 
             // Read graphics properties for preferred swapchain length and logging.
             XrSystemProperties systemProperties{XR_TYPE_SYSTEM_PROPERTIES};
             CHECK_XRCMD(xrGetSystemProperties(m_instance.Get(), m_systemId, &systemProperties));
 
             // Select color and depth swapchain pixel formats
-            const auto [colorSwapchainFormat, depthSwapchainFormat] = SelectSwapchainPixelFormats();
+            const auto [colorSwapchainFormat, depthSwapchainFormat] = SelectSwapchainPixelFormats(); //TODO: dx12?
 
             // Query and cache view configuration views.
             uint32_t viewCount;
@@ -376,7 +377,7 @@ namespace {
                                      textureArraySize,
                                      swapchainSampleCount,
                                      0 /*createFlags*/,
-                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
+                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT); //TODO: dx12
 
             m_renderResources->DepthSwapchain =
                 CreateSwapchainD3D11(m_session.Get(),
@@ -386,7 +387,7 @@ namespace {
                                      textureArraySize,
                                      swapchainSampleCount,
                                      0 /*createFlags*/,
-                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT); //TODO: dx12
 
             // Preallocate view buffers for xrLocateViews later inside frame loop.
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
@@ -643,7 +644,7 @@ namespace {
                 }
 
                 // Then render projection layer into each view.
-                if (RenderLayer(frameState.predictedDisplayTime, layer)) {
+                if (RenderLayer(frameState.predictedDisplayTime, layer)) { //TODO: dx12
                     layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
                 }
             }
@@ -801,7 +802,7 @@ namespace {
                                          colorSwapchain.Images[colorSwapchainImageIndex].texture,
                                          depthSwapchain.Format,
                                          depthSwapchain.Images[depthSwapchainImageIndex].texture,
-                                         visibleCubes);
+                                         visibleCubes); //TODO: dx12
 
             XrSwapchainImageReleaseInfo releaseInfo{XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};
             CHECK_XRCMD(xrReleaseSwapchainImage(colorSwapchain.Handle.Get(), &releaseInfo));
