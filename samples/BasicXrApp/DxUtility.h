@@ -18,6 +18,12 @@
 #include <d3dcommon.h>  //ID3DBlob
 
 namespace sample::dx {
+    //-----------------------------------------------------------------------------
+    // Purpose: Outputs a set of optional arguments to debugging output, using
+    //          the printf format setting specified in fmt*.
+    //-----------------------------------------------------------------------------
+    static bool g_bPrintf = true;
+    void dprintf(const char* fmt, ...); 
 
     winrt::com_ptr<IDXGIAdapter1> GetAdapter(LUID adapterId);
 

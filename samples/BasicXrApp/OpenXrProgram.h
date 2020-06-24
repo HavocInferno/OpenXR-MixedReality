@@ -34,7 +34,7 @@ namespace sample {
         virtual ~IGraphicsPluginD3D12() = default;
 
         // Create an instance of this graphics api for the provided instance and systemId.
-        virtual ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) = 0;
+        virtual ID3D12Device* InitializeDevice(LUID adapterLuid) = 0;
 
         // List of color pixel formats supported by this app.
         virtual const std::vector<DXGI_FORMAT>& SupportedColorFormats() const = 0;
@@ -49,6 +49,30 @@ namespace sample {
                                 DXGI_FORMAT depthSwapchainFormat,
                                 ID3D11Texture2D* depthTexture,
                                 const std::vector<const sample::Cube*>& cubes) = 0;
+
+    public:
+        winrt::com_ptr<ID3D12Device> m_pDevice;
+        winrt::com_ptr<ID3D12CommandQueue> m_pCommandQueue;
+        bool m_bDebugD3D12;
+        UINT m_nFrameIndex;
+        static const int g_nFrameCount = 2; // Swapchain depth //TODO: exclude companion window items for now, this too?
+        // uint32_t m_nCompanionWindowWidth; //TODO: exclude companion window items for now
+        // uint32_t m_nCompanionWindowHeight; //TODO: exclude companion window items for now
+        UINT m_nRTVDescriptorSize;
+        UINT m_nDSVDescriptorSize;
+        UINT m_nCBVSRVDescriptorSize;
+        winrt::com_ptr<ID3D12DescriptorHeap> m_pCBVSRVHeap;
+        winrt::com_ptr<ID3D12DescriptorHeap> m_pRTVHeap;
+        winrt::com_ptr<ID3D12DescriptorHeap> m_pDSVHeap;
+        winrt::com_ptr<ID3D12Resource> m_pSceneConstantBuffer;
+        UINT8* m_pSceneConstantBufferData[2];
+        D3D12_CPU_DESCRIPTOR_HANDLE m_sceneConstantBufferView[2];
+        winrt::com_ptr<ID3D12CommandAllocator> m_pCommandAllocators[g_nFrameCount];
+        winrt::com_ptr<ID3D12PipelineState> m_pScenePipelineState;
+        winrt::com_ptr<ID3D12GraphicsCommandList> m_pCommandList;
+        winrt::com_ptr<ID3D12Fence> m_pFence;
+        UINT64 m_nFenceValues[g_nFrameCount];
+        HANDLE m_fenceEvent;
     };
 
     std::unique_ptr<IGraphicsPluginD3D12> CreateCubeGraphics();

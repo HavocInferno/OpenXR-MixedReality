@@ -107,20 +107,238 @@ namespace {
 
     } // namespace CubeShader
 
+    // Slots in the RenderTargetView descriptor heap
+    enum RTVIndex_t { 
+        RTV_LEFT_EYE = 0, 
+        RTV_RIGHT_EYE, 
+        RTV_SWAPCHAIN0, 
+        RTV_SWAPCHAIN1, 
+        NUM_RTVS 
+    };
+
+    // Slots in the ConstantBufferView/ShaderResourceView descriptor heap
+    enum CBVSRVIndex_t {
+        CBV_LEFT_EYE = 0,
+        CBV_RIGHT_EYE,
+        SRV_LEFT_EYE,
+        SRV_RIGHT_EYE,
+        SRV_TEXTURE_MAP,
+        // Slot for texture in each possible render model
+        SRV_TEXTURE_RENDER_MODEL0,
+        // SRV_TEXTURE_RENDER_MODEL_MAX = SRV_TEXTURE_RENDER_MODEL0 + vr::k_unMaxTrackedDeviceCount, //TODO: replace vr->xr
+        // Slot for transform in each possible rendermodel
+        CBV_LEFT_EYE_RENDER_MODEL0,
+        // CBV_LEFT_EYE_RENDER_MODEL_MAX = CBV_LEFT_EYE_RENDER_MODEL0 + vr::k_unMaxTrackedDeviceCount, //TODO: replace vr->xr
+        CBV_RIGHT_EYE_RENDER_MODEL0,
+        // CBV_RIGHT_EYE_RENDER_MODEL_MAX = CBV_RIGHT_EYE_RENDER_MODEL0 + vr::k_unMaxTrackedDeviceCount, //TODO: replace vr->xr
+        NUM_SRV_CBVS
+    };
+
     struct CubeGraphics : sample::IGraphicsPluginD3D12 {
-        ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) override {
-            const winrt::com_ptr<IDXGIAdapter1> adapter = sample::dx::GetAdapter(adapterLuid);
+        bool InitializeD3D12Device(LUID adapterLuid) {
+            /* 
+            adapted from Valve HelloVR DX12 sample 
+            */
 
-            //sample::dx::CreateD3D11DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
+            UINT nDXGIFactoryFlags = 0;
+
+            // Debug layers if -dxdebug is specified
+            if (m_bDebugD3D12) {
+                winrt::com_ptr<ID3D12Debug> pDebugController;
+                if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(pDebugController.put())))) {
+                    pDebugController->EnableDebugLayer();
+                    nDXGIFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+                }
+            }
+
+            winrt::com_ptr<IDXGIFactory4> pFactory;
+            if (FAILED(CreateDXGIFactory2(nDXGIFactoryFlags, IID_PPV_ARGS(pFactory.put())))) {
+                sample::dx::dprintf("CreateDXGIFactory2 failed.\n");
+                return false;
+            }
+
+            // Query OpenXR for the output adapter index
+            winrt::com_ptr<IDXGIAdapter1> pAdapter = sample::dx::GetAdapter(adapterLuid);
             
-            InitializeD3DResources();
+            DXGI_ADAPTER_DESC1 adapterDesc;
+            pAdapter->GetDesc1(&adapterDesc);
 
-            return m_device.get();
+            if (FAILED(D3D12CreateDevice(pAdapter.get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(m_pDevice.put())))) {
+                sample::dx::dprintf("Failed to create D3D12 device with D3D12CreateDevice.\n");
+                return false;
+            }
+
+            return true; 
         }
 
-        void InitializeD3DResources() {
+        ID3D12Device* InitializeD3D12(LUID adapterLuid) override {
+            bool ret = InitializeD3D12Device(adapterLuid); 
+            ret = InitializeD3DResources();
+
+            return m_pDevice.get();
+        }
+
+        bool InitializeD3DResources() {
             //CHECK_MSG(options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizer,
             //          "This sample requires VPRT support. Adjust sample shaders on GPU without VRPT.");
+
+
+
+            /*
+            adapted from Valve HelloVR DX12 sample
+            */
+
+            // Create the command queue
+            D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+            queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+            queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+            if (FAILED(m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCommandQueue.put())))) {
+                printf("Failed to create D3D12 command queue.\n");
+                return false;
+            }
+
+            // Create the swapchain //TODO: exclude companion window items for now
+            /*DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+            swapChainDesc.BufferCount = g_nFrameCount;
+            swapChainDesc.Width = m_nCompanionWindowWidth;
+            swapChainDesc.Height = m_nCompanionWindowHeight;
+            swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+            swapChainDesc.SampleDesc.Count = 1;*/
+
+            // Determine the HWND from SDL //TODO: exclude companion window items for now
+            /*struct SDL_SysWMinfo wmInfo;
+            SDL_VERSION(&wmInfo.version);
+            SDL_GetWindowWMInfo(m_pCompanionWindow, &wmInfo);
+            HWND hWnd = wmInfo.info.win.window;
+
+            ComPtr<IDXGISwapChain1> pSwapChain;
+            if (FAILED(pFactory->CreateSwapChainForHwnd(m_pCommandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &pSwapChain))) {
+                dprintf("Failed to create DXGI swapchain.\n");
+                return false;
+            }
+
+            pFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
+            pSwapChain.As(&m_pSwapChain);
+            m_nFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();*/
+
+            // Create descriptor heaps
+            {
+                m_nRTVDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+                m_nDSVDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+                m_nCBVSRVDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+                D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+                rtvHeapDesc.NumDescriptors = NUM_RTVS;
+                rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+                rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+                m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.put()));
+
+                D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+                rtvHeapDesc.NumDescriptors = NUM_RTVS;
+                rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+                rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+                m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pDSVHeap.put()));
+
+                D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
+                cbvSrvHeapDesc.NumDescriptors = NUM_SRV_CBVS;
+                cbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+                cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+                m_pDevice->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(m_pCBVSRVHeap.put()));
+            }
+
+            // Create per-frame resources //TODO: exclude companion window items for now
+            /*for (int nFrame = 0; nFrame < g_nFrameCount; nFrame++) {
+                if (FAILED(
+                        m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_pCommandAllocators[nFrame])))) {
+                    dprintf("Failed to create command allocators.\n");
+                    return false;
+                }
+
+                // Create swapchain render targets
+                m_pSwapChain->GetBuffer(nFrame, IID_PPV_ARGS(&m_pSwapChainRenderTarget[nFrame]));
+
+                // Create swapchain render target views
+                CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart());
+                rtvHandle.Offset(RTV_SWAPCHAIN0 + nFrame, m_nRTVDescriptorSize);
+                m_pDevice->CreateRenderTargetView(m_pSwapChainRenderTarget[nFrame].Get(), nullptr, rtvHandle);
+            }*/
+
+            // Create constant buffer
+            {
+                auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD); 
+                auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(1024 * 64); 
+                m_pDevice->CreateCommittedResource(&heap_props,
+                                                   D3D12_HEAP_FLAG_NONE,
+                                                   &resource_desc,
+                                                   D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                   nullptr,
+                                                   IID_PPV_ARGS(m_pSceneConstantBuffer.put()));
+
+                // Keep as persistently mapped buffer, store left eye in first 256 bytes, right eye in second
+                UINT8* pBuffer;
+                CD3DX12_RANGE readRange(0, 0);
+                m_pSceneConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pBuffer));
+                // Left eye to first 256 bytes, right eye to second 256 bytes
+                m_pSceneConstantBufferData[0] = pBuffer;
+                m_pSceneConstantBufferData[1] = pBuffer + 256;
+
+                // Left eye CBV
+                CD3DX12_CPU_DESCRIPTOR_HANDLE cbvLeftEyeHandle(m_pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+                cbvLeftEyeHandle.Offset(CBV_LEFT_EYE, m_nCBVSRVDescriptorSize);
+                D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+                cbvDesc.BufferLocation = m_pSceneConstantBuffer->GetGPUVirtualAddress();
+                cbvDesc.SizeInBytes = (sizeof(DirectX::XMMATRIX) + 255) & ~255; // Pad to 256 bytes
+                m_pDevice->CreateConstantBufferView(&cbvDesc, cbvLeftEyeHandle);
+                m_sceneConstantBufferView[0] = cbvLeftEyeHandle;
+
+                // Right eye CBV
+                CD3DX12_CPU_DESCRIPTOR_HANDLE cbvRightEyeHandle(m_pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+                cbvRightEyeHandle.Offset(CBV_RIGHT_EYE, m_nCBVSRVDescriptorSize);
+                cbvDesc.BufferLocation += 256;
+                m_pDevice->CreateConstantBufferView(&cbvDesc, cbvRightEyeHandle);
+                m_sceneConstantBufferView[1] = cbvRightEyeHandle;
+            }
+
+            // Create fence //TODO: exclude companion window items for now
+            /*{
+                memset(m_nFenceValues, 0, sizeof(m_nFenceValues));
+                m_pDevice->CreateFence(m_nFenceValues[m_nFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pFence));
+                m_nFenceValues[m_nFrameIndex]++;
+
+                m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            }*/
+
+            if (!sample::dx::CreateAllShaders())
+                return false;
+
+            // Create command list
+            m_pDevice->CreateCommandList(0,
+                                         D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                         m_pCommandAllocators[m_nFrameIndex].get(),
+                                         m_pScenePipelineState.get(),
+                                         IID_PPV_ARGS(m_pCommandList.put()));
+
+            // SetupTexturemaps(); //TODO: adapt from CMainApplication
+            // SetupScene(); //TODO: adapt from CMainApplication
+            // SetupCameras(); //TODO: adapt from CMainApplication
+            // SetupStereoRenderTargets(); //TODO: adapt from CMainApplication
+            // SetupCompanionWindow(); //TODO: adapt from CMainApplication
+            // SetupRenderModels(); //TODO: adapt from CMainApplication
+
+            // Do any work that was queued up during loading
+            m_pCommandList->Close();
+            ID3D12CommandList* ppCommandLists[] = {m_pCommandList.get()};
+            m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+            // Wait for it to finish
+            m_pCommandQueue->Signal(m_pFence.get(), m_nFenceValues[m_nFrameIndex]);
+            m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
+            WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+            m_nFenceValues[m_nFrameIndex]++;
+
+            return true;
         }
 
         const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override {

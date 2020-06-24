@@ -19,6 +19,24 @@
 #pragma comment(lib, "D3DCompiler.lib")
 
 namespace sample::dx {
+    //-----------------------------------------------------------------------------
+    // Purpose: Outputs a set of optional arguments to debugging output, using
+    //          the printf format setting specified in fmt*.
+    //-----------------------------------------------------------------------------
+    void dprintf(const char* fmt, ...) {
+        va_list args;
+        char buffer[2048];
+
+        va_start(args, fmt);
+        vsprintf_s(buffer, fmt, args);
+        va_end(args);
+
+        if (g_bPrintf)
+            printf("%s", buffer);
+
+        OutputDebugStringA(buffer);
+    }
+
     winrt::com_ptr<IDXGIAdapter1> GetAdapter(LUID adapterId) {
         // Create the DXGI factory.
         winrt::com_ptr<IDXGIFactory1> dxgiFactory;
