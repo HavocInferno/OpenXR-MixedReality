@@ -34,7 +34,7 @@ namespace sample {
         virtual ~IGraphicsPluginD3D12() = default;
 
         // Create an instance of this graphics api for the provided instance and systemId.
-        virtual ID3D12Device* InitializeDevice(LUID adapterLuid) = 0;
+        virtual ID3D12Device* InitializeD3D12(LUID adapterLuid) = 0;
 
         // List of color pixel formats supported by this app.
         virtual const std::vector<DXGI_FORMAT>& SupportedColorFormats() const = 0;
