@@ -234,7 +234,7 @@ namespace {
             CHECK(m_session.Get() == XR_NULL_HANDLE);
 
             // Create the D3D11 device for the adapter associated with the system.
-            XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR}; //TODO: dx12
+            XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR}; 
             CHECK_XRCMD(m_extensions.xrGetD3D12GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
 
             // Create a list of feature levels which are both supported by the OpenXR runtime and this application.
@@ -248,7 +248,7 @@ namespace {
 
             ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid); 
 
-            XrGraphicsBindingD3D12KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR}; //TODO: dx12
+            XrGraphicsBindingD3D12KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR}; 
             graphicsBinding.device = device;
 
             XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
@@ -639,7 +639,7 @@ namespace {
                 }
 
                 // Then render projection layer into each view.
-                if (RenderLayer(frameState.predictedDisplayTime, layer)) { //TODO: dx12
+                if (RenderLayer(frameState.predictedDisplayTime, layer)) { // TODO: dx12
                     layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
                 }
             }
