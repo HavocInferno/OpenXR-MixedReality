@@ -33,7 +33,9 @@
 #define NOMINMAX
 #include <windows.h>
 
+#include <dxgi1_4.h>
 #include <d3d12.h>
+#include <d3dx12.h>
 
 #define XR_USE_PLATFORM_WIN32
 #define XR_USE_GRAPHICS_API_D3D12 

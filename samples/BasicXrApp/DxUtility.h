@@ -27,4 +27,6 @@ namespace sample::dx {
                                      ID3D11DeviceContext** deviceContext);*/
 
     winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget);
+
+    bool CreateAllShaders(); 
 } // namespace sample::dx

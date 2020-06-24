@@ -100,4 +100,10 @@ namespace sample::dx {
 
         return compiled;
     }
+
+    bool CreateAllShaders() {
+        //TODO: adapt CMainApplication::CreateAllShaders()
+        
+        return false;
+    }
 } // namespace sample::dx
