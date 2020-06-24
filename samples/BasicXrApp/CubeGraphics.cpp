@@ -361,7 +361,7 @@ namespace {
             return SupportedDepthFormats;
         }
 
-        void RenderView(const XrRect2Di& imageRect,
+        /*void RenderView(const XrRect2Di& imageRect,
                         const float renderTargetClearColor[4],
                         const std::vector<xr::math::ViewProjection>& viewProjections,
                         DXGI_FORMAT colorSwapchainFormat,
@@ -369,7 +369,7 @@ namespace {
                         DXGI_FORMAT depthSwapchainFormat,
                         ID3D11Texture2D* depthTexture,
                         const std::vector<const sample::Cube*>& cubes) override {
-            /*const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
+            const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
             CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
                       "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
 
@@ -434,11 +434,11 @@ namespace {
 
                 // Draw the cube.
                 m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
-            }*/
-        }
+            }
+        }*/
 
     private:
-        winrt::com_ptr<ID3D12Device> m_device;
+        /*winrt::com_ptr<ID3D12Device> m_device;
         winrt::com_ptr<ID3D11DeviceContext> m_deviceContext;
         winrt::com_ptr<ID3D11VertexShader> m_vertexShader;
         winrt::com_ptr<ID3D11PixelShader> m_pixelShader;
@@ -447,7 +447,7 @@ namespace {
         winrt::com_ptr<ID3D11Buffer> m_viewProjectionCBuffer;
         winrt::com_ptr<ID3D11Buffer> m_cubeVertexBuffer;
         winrt::com_ptr<ID3D11Buffer> m_cubeIndexBuffer;
-        winrt::com_ptr<ID3D11DepthStencilState> m_reversedZDepthNoStencilTest;
+        winrt::com_ptr<ID3D11DepthStencilState> m_reversedZDepthNoStencilTest;*/
     };
 } // namespace
 
