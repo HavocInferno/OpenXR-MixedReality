@@ -111,58 +111,16 @@ namespace {
         ID3D12Device* InitializeDevice(LUID adapterLuid, const std::vector<D3D_FEATURE_LEVEL>& featureLevels) override {
             const winrt::com_ptr<IDXGIAdapter1> adapter = sample::dx::GetAdapter(adapterLuid);
 
-            sample::dx::CreateD3D11DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
-
+            //sample::dx::CreateD3D11DeviceAndContext(adapter.get(), featureLevels, m_device.put(), m_deviceContext.put());
+            
             InitializeD3DResources();
 
             return m_device.get();
         }
 
         void InitializeD3DResources() {
-            const winrt::com_ptr<ID3DBlob> vertexShaderBytes = sample::dx::CompileShader(CubeShader::ShaderHlsl, "MainVS", "vs_5_0");
-            CHECK_HRCMD(m_device->CreateVertexShader(
-                vertexShaderBytes->GetBufferPointer(), vertexShaderBytes->GetBufferSize(), nullptr, m_vertexShader.put()));
-
-            const winrt::com_ptr<ID3DBlob> pixelShaderBytes = sample::dx::CompileShader(CubeShader::ShaderHlsl, "MainPS", "ps_5_0");
-            CHECK_HRCMD(m_device->CreatePixelShader(
-                pixelShaderBytes->GetBufferPointer(), pixelShaderBytes->GetBufferSize(), nullptr, m_pixelShader.put()));
-
-            const D3D11_INPUT_ELEMENT_DESC vertexDesc[] = {
-                {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            };
-
-            CHECK_HRCMD(m_device->CreateInputLayout(vertexDesc,
-                                                    (UINT)std::size(vertexDesc),
-                                                    vertexShaderBytes->GetBufferPointer(),
-                                                    vertexShaderBytes->GetBufferSize(),
-                                                    m_inputLayout.put()));
-
-            const CD3D11_BUFFER_DESC modelConstantBufferDesc(sizeof(CubeShader::ModelConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-            CHECK_HRCMD(m_device->CreateBuffer(&modelConstantBufferDesc, nullptr, m_modelCBuffer.put()));
-
-            const CD3D11_BUFFER_DESC viewProjectionConstantBufferDesc(sizeof(CubeShader::ViewProjectionConstantBuffer),
-                                                                      D3D11_BIND_CONSTANT_BUFFER);
-            CHECK_HRCMD(m_device->CreateBuffer(&viewProjectionConstantBufferDesc, nullptr, m_viewProjectionCBuffer.put()));
-
-            const D3D11_SUBRESOURCE_DATA vertexBufferData{CubeShader::c_cubeVertices};
-            const CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(CubeShader::c_cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-            CHECK_HRCMD(m_device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, m_cubeVertexBuffer.put()));
-
-            const D3D11_SUBRESOURCE_DATA indexBufferData{CubeShader::c_cubeIndices};
-            const CD3D11_BUFFER_DESC indexBufferDesc(sizeof(CubeShader::c_cubeIndices), D3D11_BIND_INDEX_BUFFER);
-            CHECK_HRCMD(m_device->CreateBuffer(&indexBufferDesc, &indexBufferData, m_cubeIndexBuffer.put()));
-
-            D3D11_FEATURE_DATA_D3D11_OPTIONS3 options;
-            m_device->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS3, &options, sizeof(options));
-            CHECK_MSG(options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizer,
-                      "This sample requires VPRT support. Adjust sample shaders on GPU without VRPT.");
-
-            CD3D11_DEPTH_STENCIL_DESC depthStencilDesc(CD3D11_DEFAULT{});
-            depthStencilDesc.DepthEnable = true;
-            depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-            depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
-            CHECK_HRCMD(m_device->CreateDepthStencilState(&depthStencilDesc, m_reversedZDepthNoStencilTest.put()));
+            //CHECK_MSG(options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizer,
+            //          "This sample requires VPRT support. Adjust sample shaders on GPU without VRPT.");
         }
 
         const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override {
@@ -193,7 +151,7 @@ namespace {
                         DXGI_FORMAT depthSwapchainFormat,
                         ID3D11Texture2D* depthTexture,
                         const std::vector<const sample::Cube*>& cubes) override {
-            const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
+            /*const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
             CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
                       "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
 
@@ -258,7 +216,7 @@ namespace {
 
                 // Draw the cube.
                 m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
-            }
+            }*/
         }
 
     private:

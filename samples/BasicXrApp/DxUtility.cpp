@@ -38,7 +38,7 @@ namespace sample::dx {
         }
     }
 
-    void CreateD3D11DeviceAndContext(IDXGIAdapter1* adapter,
+    /*void CreateD3D11DeviceAndContext(IDXGIAdapter1* adapter,
                                      const std::vector<D3D_FEATURE_LEVEL>& featureLevels,
                                      ID3D11Device** device,
                                      ID3D11DeviceContext** deviceContext) {
@@ -77,7 +77,7 @@ namespace sample::dx {
                 goto TryAgain;
             }
         }
-    }
+    }*/
 
     winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget) {
         winrt::com_ptr<ID3DBlob> compiled;
