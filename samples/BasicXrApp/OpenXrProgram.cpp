@@ -329,14 +329,14 @@ namespace {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
             CHECK(m_renderResources == nullptr);
 
-            m_renderResources = std::make_unique<RenderResources>(); //TODO: dx12
+            m_renderResources = std::make_unique<RenderResources>(); 
 
             // Read graphics properties for preferred swapchain length and logging.
             XrSystemProperties systemProperties{XR_TYPE_SYSTEM_PROPERTIES};
             CHECK_XRCMD(xrGetSystemProperties(m_instance.Get(), m_systemId, &systemProperties));
 
             // Select color and depth swapchain pixel formats
-            const auto [colorSwapchainFormat, depthSwapchainFormat] = SelectSwapchainPixelFormats(); //TODO: dx12?
+            const auto [colorSwapchainFormat, depthSwapchainFormat] = SelectSwapchainPixelFormats(); 
 
             // Query and cache view configuration views.
             uint32_t viewCount;
@@ -639,7 +639,7 @@ namespace {
                 }
 
                 // Then render projection layer into each view.
-                if (RenderLayer(frameState.predictedDisplayTime, layer)) { // TODO: dx12
+                if (RenderLayer(frameState.predictedDisplayTime, layer)) { 
                     layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
                 }
             }
