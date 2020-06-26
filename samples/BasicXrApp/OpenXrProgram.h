@@ -53,7 +53,8 @@ namespace sample {
     public:
         winrt::com_ptr<ID3D12Device> m_pDevice;
         winrt::com_ptr<ID3D12CommandQueue> m_pCommandQueue;
-        bool m_bDebugD3D12;
+        bool m_bDebugD3D12 = true;
+        int m_nMSAASampleCount = 1;
         UINT m_nFrameIndex;
         static const int g_nFrameCount = 2; // Swapchain depth //TODO: exclude companion window items for now, this too?
         // uint32_t m_nCompanionWindowWidth; //TODO: exclude companion window items for now
