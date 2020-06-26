@@ -250,6 +250,7 @@ namespace {
 
             XrGraphicsBindingD3D12KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR}; 
             graphicsBinding.device = device;
+            graphicsBinding.queue = m_graphicsPlugin->m_pCommandQueue.get(); 
 
             XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
             createInfo.next = &graphicsBinding;
