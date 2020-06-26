@@ -179,10 +179,16 @@ namespace {
         }
 
         bool InitializeD3DResources() {
+            /*
+            adapted from former DX11 resource init 
+
             //CHECK_MSG(options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizer,
             //          "This sample requires VPRT support. Adjust sample shaders on GPU without VRPT.");
-
-
+            */
+            D3D12_FEATURE_DATA_D3D12_OPTIONS options;
+            m_pDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
+            CHECK_MSG(options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation,
+                      "This sample requires VPRT support. Adjust sample shaders on GPU without VRPT.");
 
             /*
             adapted from Valve HelloVR DX12 sample
