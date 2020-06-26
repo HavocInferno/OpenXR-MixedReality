@@ -366,31 +366,31 @@ namespace {
             // The texture array has the size of viewCount, and they are rendered in a single pass using VPRT.
             const uint32_t textureArraySize = viewCount;
             m_renderResources->ColorSwapchain =
-                CreateSwapchainD3D11(m_session.Get(),
+                CreateSwapchainD3D12(m_session.Get(),
                                      colorSwapchainFormat,
                                      imageRectWidth,
                                      imageRectHeight,
                                      textureArraySize,
                                      swapchainSampleCount,
                                      0 /*createFlags*/,
-                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT); //TODO: dx12
+                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT); 
 
             m_renderResources->DepthSwapchain =
-                CreateSwapchainD3D11(m_session.Get(),
+                CreateSwapchainD3D12(m_session.Get(),
                                      depthSwapchainFormat,
                                      imageRectWidth,
                                      imageRectHeight,
                                      textureArraySize,
                                      swapchainSampleCount,
                                      0 /*createFlags*/,
-                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT); //TODO: dx12
+                                     XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT); 
 
             // Preallocate view buffers for xrLocateViews later inside frame loop.
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
         }
 
         struct SwapchainD3D12;
-        SwapchainD3D12 CreateSwapchainD3D11(XrSession session,
+        SwapchainD3D12 CreateSwapchainD3D12(XrSession session,
                                             DXGI_FORMAT format,
                                             uint32_t width,
                                             uint32_t height,
@@ -420,7 +420,7 @@ namespace {
             uint32_t chainLength;
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(), 0, &chainLength, nullptr));
 
-            swapchain.Images.resize(chainLength, {XR_TYPE_SWAPCHAIN_IMAGE_D3D11_KHR});
+            swapchain.Images.resize(chainLength, {XR_TYPE_SWAPCHAIN_IMAGE_D3D12_KHR});
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(),
                                                    (uint32_t)swapchain.Images.size(),
                                                    &chainLength,
