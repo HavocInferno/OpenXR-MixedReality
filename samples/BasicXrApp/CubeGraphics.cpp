@@ -248,14 +248,16 @@ namespace {
                 m_pDevice->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(m_pCBVSRVHeap.put()));
             }
 
-            // Create per-frame resources //TODO: exclude companion window items for now
-            /*for (int nFrame = 0; nFrame < g_nFrameCount; nFrame++) {
+            // Create per-frame resources 
+            for (int nFrame = 0; nFrame < g_nFrameCount; nFrame++) {
                 if (FAILED(
-                        m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_pCommandAllocators[nFrame])))) {
-                    dprintf("Failed to create command allocators.\n");
+                        m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocators[nFrame].put())))) {
+                    sample::dx::dprintf("Failed to create command allocators.\n");
                     return false;
                 }
 
+                // TODO: exclude companion window items for now
+                /*
                 // Create swapchain render targets
                 m_pSwapChain->GetBuffer(nFrame, IID_PPV_ARGS(&m_pSwapChainRenderTarget[nFrame]));
 
@@ -263,7 +265,8 @@ namespace {
                 CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart());
                 rtvHandle.Offset(RTV_SWAPCHAIN0 + nFrame, m_nRTVDescriptorSize);
                 m_pDevice->CreateRenderTargetView(m_pSwapChainRenderTarget[nFrame].Get(), nullptr, rtvHandle);
-            }*/
+                */
+            }
 
             // Create constant buffer
             {
@@ -301,14 +304,14 @@ namespace {
                 m_sceneConstantBufferView[1] = cbvRightEyeHandle;
             }
 
-            // Create fence //TODO: exclude companion window items for now
-            /*{
+            // Create fence 
+            {
                 memset(m_nFenceValues, 0, sizeof(m_nFenceValues));
-                m_pDevice->CreateFence(m_nFenceValues[m_nFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pFence));
+                m_pDevice->CreateFence(m_nFenceValues[m_nFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.put()));
                 m_nFenceValues[m_nFrameIndex]++;
 
                 m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            }*/
+            }
 
             if (!sample::dx::CreateAllShaders())
                 return false;
