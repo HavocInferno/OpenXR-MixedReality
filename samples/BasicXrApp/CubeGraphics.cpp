@@ -313,7 +313,12 @@ namespace {
                 m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             }
 
-            if (!sample::dx::CreateAllShaders())
+            if (!sample::dx::CreateAllShaders(m_pDevice,
+                                              m_pRootSignature,
+                                              m_nMSAASampleCount,
+                                              m_pScenePipelineState,
+                                              m_pAxesPipelineState,
+                                              m_pRenderModelPipelineState))
                 return false;
 
             // Create command list

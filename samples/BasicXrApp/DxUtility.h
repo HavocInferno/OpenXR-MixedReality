@@ -34,5 +34,11 @@ namespace sample::dx {
 
     winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget);
 
-    bool CreateAllShaders(); 
+    bool CreateAllShaders(winrt::com_ptr<ID3D12Device>& pDevice,
+                          winrt::com_ptr<ID3D12RootSignature>& pRootSignature,
+                          int nMSAASampleCount,
+                          winrt::com_ptr<ID3D12PipelineState>& pScenePipelineState,
+                          //winrt::com_ptr<ID3D12PipelineState>& pCompanionPipelineState, //TODO: exclude companion window items for now
+                          winrt::com_ptr<ID3D12PipelineState>& pAxesPipelineState,
+                          winrt::com_ptr<ID3D12PipelineState>& m_pRenderModelPipelineState);
 } // namespace sample::dx

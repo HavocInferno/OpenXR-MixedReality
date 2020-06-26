@@ -69,11 +69,16 @@ namespace sample {
         UINT8* m_pSceneConstantBufferData[2];
         D3D12_CPU_DESCRIPTOR_HANDLE m_sceneConstantBufferView[2];
         winrt::com_ptr<ID3D12CommandAllocator> m_pCommandAllocators[g_nFrameCount];
-        winrt::com_ptr<ID3D12PipelineState> m_pScenePipelineState;
         winrt::com_ptr<ID3D12GraphicsCommandList> m_pCommandList;
         winrt::com_ptr<ID3D12Fence> m_pFence;
         UINT64 m_nFenceValues[g_nFrameCount];
         HANDLE m_fenceEvent;
+
+        winrt::com_ptr<ID3D12RootSignature> m_pRootSignature;
+        winrt::com_ptr<ID3D12PipelineState> m_pScenePipelineState;
+        winrt::com_ptr<ID3D12PipelineState> m_pCompanionPipelineState;
+        winrt::com_ptr<ID3D12PipelineState> m_pAxesPipelineState;
+        winrt::com_ptr<ID3D12PipelineState> m_pRenderModelPipelineState;
     };
 
     std::unique_ptr<IGraphicsPluginD3D12> CreateCubeGraphics();
