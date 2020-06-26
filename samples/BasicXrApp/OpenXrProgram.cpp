@@ -233,7 +233,7 @@ namespace {
             CHECK(m_systemId != XR_NULL_SYSTEM_ID);
             CHECK(m_session.Get() == XR_NULL_HANDLE);
 
-            // Create the D3D11 device for the adapter associated with the system.
+            // Create the D3D12 device for the adapter associated with the system.
             XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR}; 
             CHECK_XRCMD(m_extensions.xrGetD3D12GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
 
