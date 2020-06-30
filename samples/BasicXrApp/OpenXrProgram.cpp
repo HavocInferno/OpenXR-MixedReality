@@ -97,7 +97,13 @@ namespace {
             };
 
             // D3D12 extension is required for this sample, so check if it's supported.
-            CHECK(EnableExtentionIfSupported(XR_KHR_D3D12_ENABLE_EXTENSION_NAME));
+            bool someD3DExtensionSupported = EnableExtentionIfSupported(XR_KHR_D3D12_ENABLE_EXTENSION_NAME);
+            if (!someD3DExtensionSupported) {
+                someD3DExtensionSupported = EnableExtentionIfSupported(XR_KHR_D3D11_ENABLE_EXTENSION_NAME);
+                m_xrD3D11Fallback = true;
+            }
+
+            CHECK(someD3DExtensionSupported);
 
             // Additional optional extensions for enhanced functionality. Track whether enabled in m_optionalExtensions.
             m_optionalExtensions.DepthExtensionSupported = EnableExtentionIfSupported(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
@@ -234,8 +240,16 @@ namespace {
             CHECK(m_session.Get() == XR_NULL_HANDLE);
 
             // Create the D3D12 device for the adapter associated with the system.
-            XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR}; 
-            CHECK_XRCMD(m_extensions.xrGetD3D12GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
+            XrGraphicsRequirementsD3D12KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D12_KHR};
+            if (!m_xrD3D11Fallback) {
+                CHECK_XRCMD(m_extensions.xrGetD3D12GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
+            } else {
+                XrGraphicsRequirementsD3D11KHR graphicsRequirements11{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
+                CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements11));
+                graphicsRequirements.next = graphicsRequirements11.next;
+                graphicsRequirements.adapterLuid = graphicsRequirements11.adapterLuid;
+                graphicsRequirements.minFeatureLevel = graphicsRequirements11.minFeatureLevel;
+            }
 
             // Create a list of feature levels which are both supported by the OpenXR runtime and this application.
             std::vector<D3D_FEATURE_LEVEL> featureLevels = {
@@ -248,7 +262,12 @@ namespace {
 
             ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid); 
 
-            XrGraphicsBindingD3D12KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR}; 
+            XrGraphicsBindingD3D12KHR graphicsBinding;
+            if (!m_xrD3D11Fallback) {
+                graphicsBinding = XrGraphicsBindingD3D12KHR{XR_TYPE_GRAPHICS_BINDING_D3D12_KHR};
+            } else {
+                graphicsBinding = XrGraphicsBindingD3D12KHR{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
+            }
             graphicsBinding.device = device;
             graphicsBinding.queue = m_graphicsPlugin->m_pCommandQueue.get(); 
 
@@ -833,6 +852,7 @@ namespace {
 
         const std::string m_applicationName;
         const std::unique_ptr<sample::IGraphicsPluginD3D12> m_graphicsPlugin;
+        bool m_xrD3D11Fallback = false;
 
         xr::InstanceHandle m_instance;
         xr::SessionHandle m_session;

@@ -26,6 +26,7 @@
     _(xrUpdateHandMeshMSFT)                      \
     _(xrConvertWin32PerformanceCounterToTimeKHR) \
     _(xrCreateSpatialGraphNodeSpaceMSFT)         \
+    _(xrGetD3D11GraphicsRequirementsKHR)         \
     _(xrGetD3D12GraphicsRequirementsKHR)         \
     _(xrGetControllerModelKeyMSFT)               \
     _(xrLoadControllerModelMSFT)                 \
