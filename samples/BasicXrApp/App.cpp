@@ -25,7 +25,7 @@ constexpr const char* ProgramName = "BasicXrApp_uwp";
 
 int __stdcall wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
     try {
-        auto graphics = sample::CreateCubeGraphics(); 
+        auto graphics = sample::CreateGraphicsCore(); 
         auto program = sample::CreateOpenXrProgram(ProgramName, std::move(graphics));
         program->Run();
     } catch (const std::exception& ex) {

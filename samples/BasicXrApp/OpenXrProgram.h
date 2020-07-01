@@ -30,7 +30,8 @@ namespace sample {
         virtual void Run() = 0;
     };
 
-    struct IGraphicsPluginD3D12 {
+    class IGraphicsPluginD3D12 {
+    public: 
         virtual ~IGraphicsPluginD3D12() = default;
 
         // Create an instance of this graphics api for the provided instance and systemId.
@@ -85,7 +86,7 @@ namespace sample {
         winrt::com_ptr<ID3D12PipelineState> m_pRenderModelPipelineState;
     };
 
-    std::unique_ptr<IGraphicsPluginD3D12> CreateCubeGraphics();
+    std::unique_ptr<IGraphicsPluginD3D12> CreateGraphicsCore();
     std::unique_ptr<IOpenXrProgram> CreateOpenXrProgram(std::string applicationName, std::unique_ptr<IGraphicsPluginD3D12> graphicsPlugin);
 
 } // namespace sample

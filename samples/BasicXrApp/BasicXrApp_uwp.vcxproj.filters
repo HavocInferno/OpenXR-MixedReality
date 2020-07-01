@@ -2,15 +2,21 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="CubeGraphics.cpp" />
     <ClCompile Include="OpenXrProgram.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="DxUtility.cpp" />
+    <ClCompile Include="GraphicsCore.cpp" />
+    <ClCompile Include="shared\lodepng.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="DxUtility.h" />
     <ClInclude Include="OpenXrProgram.h" />
+    <ClInclude Include="shared\lodepng.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\SplashScreen.scale-200.png">
@@ -41,6 +47,9 @@
   <ItemGroup>
     <Filter Include="Assets">
       <UniqueIdentifier>{ba51acbc-acf1-43fd-bb49-7c52d6095d7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{85fc52e7-e195-4219-9b05-1ce0b99be35e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -89,7 +89,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
@@ -141,12 +141,14 @@
   <ItemGroup>
     <ClInclude Include="DxUtility.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="shared\lodepng.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="CubeGraphics.cpp" />
     <ClCompile Include="DxUtility.cpp" />
+    <ClCompile Include="shared\lodepng.cpp" />
     <ClInclude Include="OpenXrProgram.h" />
+    <ClCompile Include="GraphicsCore.cpp" />
     <ClCompile Include="OpenXrProgram.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
