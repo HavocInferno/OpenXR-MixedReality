@@ -220,9 +220,9 @@ bool GraphicsCore::InitializeD3DResources() {
 
     SetupTexturemaps();
     SetupScene(); 
-    SetupCameras(); 
+    //SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip HelloVR's variant of getting view projection matrices
     SetupStereoRenderTargets(); 
-    //SetupCompanionWindow(); //TODO: adapt from CMainApplication
+    //SetupCompanionWindow(); //TODO: exclude companion window items for now
     SetupRenderModels(); 
 
     // Do any work that was queued up during loading

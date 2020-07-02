@@ -142,6 +142,7 @@ struct VertexDataScene {
 
 class GraphicsCore : public sample::IGraphicsPluginD3D12 {
 public:
+    // Inherited via IGraphicsPluginD3D12
     ID3D12Device* InitializeD3D12(LUID adapterLuid) override;
 
     const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override;
