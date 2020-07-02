@@ -553,15 +553,67 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
                               const float renderTargetClearColor[4],
                               const std::vector<xr::math::ViewProjection>& viewProjections,
                               DXGI_FORMAT colorSwapchainFormat,
-                              XrSwapchainImageD3D12KHR* colorTexture,
+                              ID3D12Resource* colorTexture,
                               DXGI_FORMAT depthSwapchainFormat,
-                              XrSwapchainImageD3D12KHR* depthTexture,
+                              ID3D12Resource* depthTexture,
                               const std::vector<const sample::Cube*>& cubes) {
+    //adapted from CMainApplication::RenderFrame
+    if (true /*hmd present*/) 
+    {
+        m_pCommandAllocators[m_nFrameIndex]->Reset();
+
+        m_pCommandList->Reset(m_pCommandAllocators[m_nFrameIndex].get(), m_pScenePipelineState.get());
+        m_pCommandList->SetGraphicsRootSignature(m_pRootSignature.get());
+
+        ID3D12DescriptorHeap* ppHeaps[] = {m_pCBVSRVHeap.get()};
+        m_pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+        //UpdateControllerAxes();
+        RenderStereoTargets(imageRect, colorTexture, depthTexture);
+        //RenderCompanionWindow();
+
+        m_pCommandList->Close();
+
+        // Execute the command list.
+        ID3D12CommandList* ppCommandLists[] = {m_pCommandList.get()};
+        m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    }
+    /*
+    // Present
+    m_pSwapChain->Present(0, 0);
+
+    // Wait for completion
+    {
+        const UINT64 nCurrentFenceValue = m_nFenceValues[m_nFrameIndex];
+        m_pCommandQueue->Signal(m_pFence.Get(), nCurrentFenceValue);
+
+        m_nFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
+        if (m_pFence->GetCompletedValue() < m_nFenceValues[m_nFrameIndex]) {
+            m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
+            WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+        }
+
+        m_nFenceValues[m_nFrameIndex] = nCurrentFenceValue + 1;
+    }
+
+    // Spew out the controller and pose count whenever they change.
+    if (m_iTrackedControllerCount != m_iTrackedControllerCount_Last || m_iValidPoseCount != m_iValidPoseCount_Last) {
+        m_iValidPoseCount_Last = m_iValidPoseCount;
+        m_iTrackedControllerCount_Last = m_iTrackedControllerCount;
+
+        dprintf("PoseCount:%d(%s) Controllers:%d\n", m_iValidPoseCount, m_strPoseClasses.c_str(), m_iTrackedControllerCount);
+    }
+
+    UpdateHMDMatrixPose();*/
+
+
+
+    //###################################################################
     const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
     CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
                 "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
 
-    CD3D11_VIEWPORT viewport(
+    /*CD3D11_VIEWPORT viewport(
         (float)imageRect.offset.x, (float)imageRect.offset.y, (float)imageRect.extent.width, (float)imageRect.extent.height);
     m_deviceContext->RSSetViewports(1, &viewport);
 
@@ -589,7 +641,7 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     ID3D11Buffer* const constantBuffers[] = {m_modelCBuffer.get(), m_viewProjectionCBuffer.get()};
     m_deviceContext->VSSetConstantBuffers(0, (UINT)std::size(constantBuffers), constantBuffers);
     m_deviceContext->VSSetShader(m_vertexShader.get(), nullptr, 0);
-    m_deviceContext->PSSetShader(m_pixelShader.get(), nullptr, 0);
+    m_deviceContext->PSSetShader(m_pixelShader.get(), nullptr, 0);*/
 
     CubeShader::ViewProjectionConstantBuffer viewProjectionCBufferData{};
 
@@ -601,7 +653,7 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
         DirectX::XMStoreFloat4x4(&viewProjectionCBufferData.ViewProjection[k],
                                     DirectX::XMMatrixTranspose(spaceToView * projectionMatrix));
     }
-    m_deviceContext->UpdateSubresource(m_viewProjectionCBuffer.get(), 0, nullptr, &viewProjectionCBufferData, 0, 0);
+    /*m_deviceContext->UpdateSubresource(m_viewProjectionCBuffer.get(), 0, nullptr, &viewProjectionCBufferData, 0, 0);
 
     // Set cube primitive data.
     const UINT strides[] = {sizeof(CubeShader::Vertex)};
@@ -610,7 +662,7 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     m_deviceContext->IASetVertexBuffers(0, (UINT)std::size(vertexBuffers), vertexBuffers, strides, offsets);
     m_deviceContext->IASetIndexBuffer(m_cubeIndexBuffer.get(), DXGI_FORMAT_R16_UINT, 0);
     m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_deviceContext->IASetInputLayout(m_inputLayout.get());
+    m_deviceContext->IASetInputLayout(m_inputLayout.get());*/
 
     // Render each cube
     for (const sample::Cube* cube : cubes) {
@@ -618,10 +670,10 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
         CubeShader::ModelConstantBuffer model;
         const DirectX::XMMATRIX scaleMatrix = DirectX::XMMatrixScaling(cube->Scale.x, cube->Scale.y, cube->Scale.z);
         DirectX::XMStoreFloat4x4(&model.Model, DirectX::XMMatrixTranspose(scaleMatrix * xr::math::LoadXrPose(cube->PoseInScene)));
-        m_deviceContext->UpdateSubresource(m_modelCBuffer.get(), 0, nullptr, &model, 0, 0);
+        //m_deviceContext->UpdateSubresource(m_modelCBuffer.get(), 0, nullptr, &model, 0, 0);
 
         // Draw the cube.
-        m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
+        //m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
     }
 }
 
