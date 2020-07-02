@@ -99,7 +99,7 @@
       <AdditionalOptions>%(AdditionalOptions) /permissive-</AdditionalOptions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <CompileAsWinRT>false</CompileAsWinRT>
     </ClCompile>
     <Link>
