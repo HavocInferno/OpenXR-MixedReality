@@ -191,11 +191,6 @@ private:
     winrt::com_ptr<ID3D12Resource> m_pTextureUploadHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_textureShaderResourceView;
 
-    Eigen::Matrix4f m_mat4ProjectionLeft;
-    Eigen::Matrix4f m_mat4ProjectionRight;
-    Eigen::Matrix4f m_mat4eyePosLeft;
-    Eigen::Matrix4f m_mat4eyePosRight;
-
     // cube array   // TODO: add to app init (or just graphics init?)
     int m_iSceneVolumeInit = 20;
     int m_iSceneVolumeWidth = m_iSceneVolumeInit;
