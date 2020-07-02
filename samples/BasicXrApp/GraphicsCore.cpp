@@ -606,6 +606,63 @@ bool GraphicsCore::CreateFrameBuffer(int nWidth,
     return true;
 }
 
+bool GraphicsCore::RenderScene(int eyeIndex) {
+    // TODO: adapt from CMainApplication
+
+    return true;
+}
+
+bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect, ID3D12Resource* colorTexture, ID3D12Resource* depthTexture) {
+    D3D12_VIEWPORT viewport = {0.0f, 0.0f, (FLOAT)imageRect.extent.width, (FLOAT)imageRect.extent.height, 0.0f, 1.0f};
+    D3D12_RECT scissor = {0, 0, (LONG)imageRect.extent.width, (LONG)imageRect.extent.height};
+
+    m_pCommandList->RSSetViewports(1, &viewport);
+    m_pCommandList->RSSetScissorRects(1, &scissor);
+
+    //----------//
+    // Left Eye //
+    //----------//
+    // Transition to RENDER_TARGET
+    m_pCommandList->ResourceBarrier(1,
+                                    &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
+                                                                          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                                                          D3D12_RESOURCE_STATE_RENDER_TARGET));
+    m_pCommandList->OMSetRenderTargets(1, &m_leftEyeDesc.m_renderTargetViewHandle, FALSE, &m_leftEyeDesc.m_depthStencilViewHandle); //TODO
+
+    const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    m_pCommandList->ClearRenderTargetView(m_leftEyeDesc.m_renderTargetViewHandle, clearColor, 0, nullptr);
+    m_pCommandList->ClearDepthStencilView(m_leftEyeDesc.m_depthStencilViewHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, 0, nullptr);
+
+    RenderScene(0); //left eye = 0
+
+    // Transition to SHADER_RESOURCE to submit to SteamVR
+    //m_pCommandList->ResourceBarrier(1,
+    //                                &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
+    //                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
+    //                                                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+    //-----------//
+    // Right Eye //
+    //-----------//
+    // Transition to RENDER_TARGET
+    //m_pCommandList->ResourceBarrier(1,
+    //                                &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
+    //                                                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+    //                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET));
+    m_pCommandList->OMSetRenderTargets(1, &m_rightEyeDesc.m_renderTargetViewHandle, FALSE, &m_rightEyeDesc.m_depthStencilViewHandle); //TODO
+
+    m_pCommandList->ClearRenderTargetView(m_rightEyeDesc.m_renderTargetViewHandle, clearColor, 0, nullptr);
+    m_pCommandList->ClearDepthStencilView(m_rightEyeDesc.m_depthStencilViewHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, 0, nullptr);
+
+    RenderScene(1); // left eye = 1
+
+    // Transition to SHADER_RESOURCE to submit to SteamVR
+    m_pCommandList->ResourceBarrier(1,
+                                    &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
+                                                                          D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+}
+
 void GraphicsCore::RenderView(const XrRect2Di& imageRect,
                               const float renderTargetClearColor[4],
                               const std::vector<xr::math::ViewProjection>& viewProjections,

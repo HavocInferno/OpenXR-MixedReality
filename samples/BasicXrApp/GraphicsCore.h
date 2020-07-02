@@ -181,6 +181,9 @@ private:
                            winrt::com_ptr<ID3D12Resource>& framebufferDepthStencil,
                            CD3DX12_CPU_DESCRIPTOR_HANDLE depthStencilViewHandle,
                            RTVIndex_t nRTVIndex); 
+    bool RenderScene(int eyeIndex); 
+    bool RenderStereoTargets(const XrRect2Di& imageRect, ID3D12Resource* colorTexture, ID3D12Resource* depthTexture);
+
 private:
     winrt::com_ptr<ID3D12Resource> m_pSceneVertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_sceneVertexBufferView;
