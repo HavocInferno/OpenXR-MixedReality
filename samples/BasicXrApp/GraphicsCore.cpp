@@ -399,9 +399,10 @@ bool GraphicsCore::SetupStereoRenderTargets() {
     //m_pHMD->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
     //m_nRenderWidth = (uint32_t)(m_flSuperSampleScale * (float)m_nRenderWidth);
     //m_nRenderHeight = (uint32_t)(m_flSuperSampleScale * (float)m_nRenderHeight);
-    //
-    //CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_leftEyeDesc, RTV_LEFT_EYE);
-    //CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_rightEyeDesc, RTV_RIGHT_EYE);
+
+    // TODO: hand over necessary args
+    CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_leftEyeDesc, RTV_LEFT_EYE);
+    CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_rightEyeDesc, RTV_RIGHT_EYE);
     
     return true;
 }
@@ -547,6 +548,62 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
         DXGI_FORMAT_D32_FLOAT_S8X24_UINT,
     };
     return SupportedDepthFormats;
+}
+
+bool GraphicsCore::CreateFrameBuffer(int nWidth,
+                       int nHeight,
+                       winrt::com_ptr<ID3D12Resource>& framebufferColorTexture,
+                       CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle,
+                       winrt::com_ptr<ID3D12Resource>& framebufferDepthStencil,
+                       CD3DX12_CPU_DESCRIPTOR_HANDLE depthStencilViewHandle,
+                       RTVIndex_t nRTVIndex) {
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    textureDesc.Width = nWidth;
+    textureDesc.Height = nHeight;
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.SampleDesc.Count = m_nMSAASampleCount;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    // Create color target
+    m_pDevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                                       D3D12_HEAP_FLAG_NONE,
+                                       &textureDesc,
+                                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                       &CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, clearColor),
+                                       IID_PPV_ARGS(framebufferColorTexture.put()));
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart());
+    rtvHandle.Offset(nRTVIndex, m_nRTVDescriptorSize);
+    m_pDevice->CreateRenderTargetView(framebufferColorTexture.get(), nullptr, rtvHandle);
+    renderTargetViewHandle = rtvHandle;
+
+    // Create shader resource view
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+    srvHandle.Offset(SRV_LEFT_EYE + nRTVIndex, m_nCBVSRVDescriptorSize);
+    m_pDevice->CreateShaderResourceView(framebufferColorTexture.get(), nullptr, srvHandle);
+
+    // Create depth
+    D3D12_RESOURCE_DESC depthDesc = textureDesc;
+    depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    m_pDevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                                       D3D12_HEAP_FLAG_NONE,
+                                       &depthDesc,
+                                       D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                       &CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D32_FLOAT, 1.0f, 0),
+                                       IID_PPV_ARGS(framebufferDepthStencil.put()));
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_pDSVHeap->GetCPUDescriptorHandleForHeapStart());
+    dsvHandle.Offset(nRTVIndex, m_nDSVDescriptorSize);
+    m_pDevice->CreateDepthStencilView(framebufferDepthStencil.get(), nullptr, dsvHandle);
+    depthStencilViewHandle = dsvHandle;
+    return true;
 }
 
 void GraphicsCore::RenderView(const XrRect2Di& imageRect,

@@ -174,6 +174,13 @@ private:
     bool AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata); 
     bool AddCubeToScene(Eigen::Matrix4f mat, std::vector<float>& vertdata); 
 
+    bool CreateFrameBuffer(int nWidth,
+                           int nHeight,
+                           winrt::com_ptr<ID3D12Resource>& framebufferColorTexture,
+                           CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle,
+                           winrt::com_ptr<ID3D12Resource>& framebufferDepthStencil,
+                           CD3DX12_CPU_DESCRIPTOR_HANDLE depthStencilViewHandle,
+                           RTVIndex_t nRTVIndex); 
 private:
     winrt::com_ptr<ID3D12Resource> m_pSceneVertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_sceneVertexBufferView;
