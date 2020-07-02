@@ -549,14 +549,14 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
     return SupportedDepthFormats;
 }
 
-/*void GraphicsCore::RenderView(const XrRect2Di& imageRect,
-                const float renderTargetClearColor[4],
-                const std::vector<xr::math::ViewProjection>& viewProjections,
-                DXGI_FORMAT colorSwapchainFormat,
-                ID3D11Texture2D* colorTexture,
-                DXGI_FORMAT depthSwapchainFormat,
-                ID3D11Texture2D* depthTexture,
-                const std::vector<const sample::Cube*>& cubes) override {
+void GraphicsCore::RenderView(const XrRect2Di& imageRect,
+                              const float renderTargetClearColor[4],
+                              const std::vector<xr::math::ViewProjection>& viewProjections,
+                              DXGI_FORMAT colorSwapchainFormat,
+                              XrSwapchainImageD3D12KHR* colorTexture,
+                              DXGI_FORMAT depthSwapchainFormat,
+                              XrSwapchainImageD3D12KHR* depthTexture,
+                              const std::vector<const sample::Cube*>& cubes) {
     const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
     CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
                 "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
@@ -623,7 +623,7 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
         // Draw the cube.
         m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
     }
-}*/
+}
 
 namespace sample {
     std::unique_ptr<sample::IGraphicsPluginD3D12> CreateGraphicsCore() {

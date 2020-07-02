@@ -149,6 +149,15 @@ public:
 
     const std::vector<DXGI_FORMAT>& SupportedDepthFormats() const override; 
 
+    virtual void RenderView(const XrRect2Di& imageRect,
+                            const float renderTargetClearColor[4],
+                            const std::vector<xr::math::ViewProjection>& viewProjections,
+                            DXGI_FORMAT colorSwapchainFormat,
+                            XrSwapchainImageD3D12KHR* colorTexture,
+                            DXGI_FORMAT depthSwapchainFormat,
+                            XrSwapchainImageD3D12KHR* depthTexture,
+                            const std::vector<const sample::Cube*>& cubes) override;
+
 private:
     bool InitializeD3D12Device(LUID adapterLuid);
 
