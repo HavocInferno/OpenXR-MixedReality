@@ -175,4 +175,18 @@ private:
     Eigen::Matrix4f m_mat4ProjectionRight;
     Eigen::Matrix4f m_mat4eyePosLeft;
     Eigen::Matrix4f m_mat4eyePosRight;
+
+    // cube array   // TODO: add to app init (or just graphics init?)
+    int m_iSceneVolumeInit = 20;
+    int m_iSceneVolumeWidth = m_iSceneVolumeInit;
+    int m_iSceneVolumeHeight = m_iSceneVolumeInit;
+    int m_iSceneVolumeDepth = m_iSceneVolumeInit;
+
+    float m_fScale = 0.3f;
+    float m_fScaleSpacing = 4.0f;
+    //
+    // float m_fNearClip = 0.1f;
+    // float m_fFarClip = 30.0f;
+
+    unsigned int m_uiVertcount = 0;
 };
