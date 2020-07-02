@@ -46,9 +46,9 @@ namespace sample {
                                 const float renderTargetClearColor[4],
                                 const std::vector<xr::math::ViewProjection>& viewProjections,
                                 DXGI_FORMAT colorSwapchainFormat,
-                                XrSwapchainImageD3D12KHR* colorTexture,
+                                ID3D12Resource* colorTexture,
                                 DXGI_FORMAT depthSwapchainFormat,
-                                XrSwapchainImageD3D12KHR* depthTexture,
+                                ID3D12Resource* depthTexture,
                                 const std::vector<const sample::Cube*>& cubes) = 0;
 
     public:
