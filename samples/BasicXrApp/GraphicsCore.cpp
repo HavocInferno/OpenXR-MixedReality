@@ -329,52 +329,36 @@ bool GraphicsCore::SetupTexturemaps() {
 }
 
 bool GraphicsCore::SetupScene() {
-    // TODO: add to app init (or just graphics init?)
-    // cube array
-    int m_iSceneVolumeInit = 20; 
-    int m_iSceneVolumeWidth = m_iSceneVolumeInit;
-    int m_iSceneVolumeHeight = m_iSceneVolumeInit;
-    int m_iSceneVolumeDepth = m_iSceneVolumeInit;
-
-    float m_fScale = 0.3f;
-    float m_fScaleSpacing = 4.0f;
-
-    float m_fNearClip = 0.1f;
-    float m_fFarClip = 30.0f;
-
-    unsigned int m_uiVertcount = 0;
-
     //TODO: replace this with openxr based check?
     /*if (!m_pHMD)
         return;*/
 
     std::vector<float> vertdataarray;
 
-    //TODO: figure out how hellovr used matrix4 here, replicate using Eigen
-    Eigen::Matrix4f matScale;
-    matScale.scale(m_fScale, m_fScale, m_fScale); //componentwise scaling (fst row * x, snd row * y, trd row * z)
-    Eigen::Matrix4f matTransform;
-    matTransform.translate(-((float)m_iSceneVolumeWidth * m_fScaleSpacing) / 2.f,
-                           -((float)m_iSceneVolumeHeight * m_fScaleSpacing) / 2.f,
-                           -((float)m_iSceneVolumeDepth * m_fScaleSpacing) / 2.f);
-
-    Eigen::Matrix4f mat = matScale * matTransform;
-
+    //add matrix of cubes
+    Eigen::Affine3f matTransform = Eigen::Affine3f::Identity();
+    matTransform.matrix().array().rowwise() *= Eigen::RowVector4f(m_fScale, m_fScale, m_fScale, 1.0).array(); 
+    matTransform.translate(Eigen::Vector3f(-((float)m_iSceneVolumeWidth * m_fScaleSpacing) / 2.f,
+                                           -((float)m_iSceneVolumeHeight * m_fScaleSpacing) / 2.f,
+                                           -((float)m_iSceneVolumeDepth * m_fScaleSpacing) / 2.f)); 
+    
     for (int z = 0; z < m_iSceneVolumeDepth; z++) {
         for (int y = 0; y < m_iSceneVolumeHeight; y++) {
             for (int x = 0; x < m_iSceneVolumeWidth; x++) {
-                AddCubeToScene(mat, vertdataarray);
-                mat = mat * Eigen::Matrix4f().translate(m_fScaleSpacing, 0, 0);
+                AddCubeToScene(matTransform.matrix(), vertdataarray);
+                matTransform.translate(Eigen::Vector3f(m_fScaleSpacing, 0, 0));
             }
-            mat = mat * Eigen::Matrix4f().translate(-((float)m_iSceneVolumeWidth) * m_fScaleSpacing, m_fScaleSpacing, 0);
+            matTransform.translate(Eigen::Vector3f(-((float)m_iSceneVolumeWidth) * m_fScaleSpacing, m_fScaleSpacing, 0));
         }
-        mat = mat * Eigen::Matrix4f().translate(0, -((float)m_iSceneVolumeHeight) * m_fScaleSpacing, m_fScaleSpacing);
+        matTransform.translate(Eigen::Vector3f(0, -((float)m_iSceneVolumeHeight) * m_fScaleSpacing, m_fScaleSpacing));
     }
-    m_uiVertcount = vertdataarray.size() / 5;
+    m_uiVertcount = (unsigned int)(vertdataarray.size()) / 5;
 
-    m_pDevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+    auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD); 
+    auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(float) * vertdataarray.size()); 
+    m_pDevice->CreateCommittedResource(&heap_props,
                                        D3D12_HEAP_FLAG_NONE,
-                                       &CD3DX12_RESOURCE_DESC::Buffer(sizeof(float) * vertdataarray.size()),
+                                       &resource_desc,
                                        D3D12_RESOURCE_STATE_GENERIC_READ,
                                        nullptr,
                                        IID_PPV_ARGS(m_pSceneVertexBuffer.put()));
@@ -387,7 +371,7 @@ bool GraphicsCore::SetupScene() {
 
     m_sceneVertexBufferView.BufferLocation = m_pSceneVertexBuffer->GetGPUVirtualAddress();
     m_sceneVertexBufferView.StrideInBytes = sizeof(VertexDataScene); //TODO: make sure this sizeof comes out as 3+2 floats
-    m_sceneVertexBufferView.SizeInBytes = sizeof(float) * vertdataarray.size();
+    m_sceneVertexBufferView.SizeInBytes = sizeof(float) * (unsigned int)(vertdataarray.size());
 
     return true;
 }
