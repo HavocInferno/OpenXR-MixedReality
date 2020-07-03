@@ -15,6 +15,7 @@
 //*********************************************************
 
 #pragma once
+#include "pch.h"
 
 namespace sample {
     struct Cube {
@@ -25,9 +26,30 @@ namespace sample {
         XrPosef PoseInScene = xr::math::Pose::Identity(); // Cube pose in the scene.  Got updated every frame
     };
 
-    struct IOpenXrProgram {
+    class IOpenXrProgram {
+    public: 
         virtual ~IOpenXrProgram() = default;
         virtual void Run() = 0;
+
+        struct SwapchainD3D12 {
+            xr::SwapchainHandle Handle;
+            DXGI_FORMAT Format{DXGI_FORMAT_UNKNOWN};
+            uint32_t Width{0};
+            uint32_t Height{0};
+            uint32_t ArraySize{0};
+            std::vector<XrSwapchainImageD3D12KHR> Images;
+            std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> ViewHandles;
+        };
+
+        struct RenderResources {
+            XrViewState ViewState{XR_TYPE_VIEW_STATE};
+            std::vector<XrView> Views;
+            std::vector<XrViewConfigurationView> ConfigViews;
+            SwapchainD3D12 ColorSwapchain;
+            SwapchainD3D12 DepthSwapchain;
+            std::vector<XrCompositionLayerProjectionView> ProjectionLayerViews;
+            std::vector<XrCompositionLayerDepthInfoKHR> DepthInfoViews;
+        };
     };
 
     class IGraphicsPluginD3D12 {

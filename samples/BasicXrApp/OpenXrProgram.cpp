@@ -19,7 +19,8 @@
 #include "DxUtility.h"
 
 namespace {
-    struct ImplementOpenXrProgram : sample::IOpenXrProgram {
+    class ImplementOpenXrProgram : public sample::IOpenXrProgram {
+    public:
         ImplementOpenXrProgram(std::string applicationName, std::unique_ptr<sample::IGraphicsPluginD3D12> graphicsPlugin)
             : m_applicationName(std::move(applicationName))
             , m_graphicsPlugin(std::move(graphicsPlugin)) {
@@ -408,7 +409,6 @@ namespace {
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
         }
 
-        struct SwapchainD3D12;
         SwapchainD3D12 CreateSwapchainD3D12(XrSession session,
                                             DXGI_FORMAT format,
                                             uint32_t width,
@@ -892,26 +892,7 @@ namespace {
         XrEnvironmentBlendMode m_environmentBlendMode{};
         xr::math::NearFar m_nearFar{};
 
-        struct SwapchainD3D12 {
-            xr::SwapchainHandle Handle;
-            DXGI_FORMAT Format{DXGI_FORMAT_UNKNOWN};
-            uint32_t Width{0};
-            uint32_t Height{0};
-            uint32_t ArraySize{0};
-            std::vector<XrSwapchainImageD3D12KHR> Images;
-        };
-
-        struct RenderResources {
-            XrViewState ViewState{XR_TYPE_VIEW_STATE};
-            std::vector<XrView> Views;
-            std::vector<XrViewConfigurationView> ConfigViews;
-            SwapchainD3D12 ColorSwapchain;
-            SwapchainD3D12 DepthSwapchain;
-            std::vector<XrCompositionLayerProjectionView> ProjectionLayerViews;
-            std::vector<XrCompositionLayerDepthInfoKHR> DepthInfoViews;
-        };
-
-        std::unique_ptr<RenderResources> m_renderResources{};
+        std::unique_ptr<sample::IOpenXrProgram::RenderResources> m_renderResources{};
 
         bool m_sessionRunning{false};
         XrSessionState m_sessionState{XR_SESSION_STATE_UNKNOWN};
