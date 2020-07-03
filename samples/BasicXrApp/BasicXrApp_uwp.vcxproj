@@ -47,8 +47,7 @@
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.18362.0</WindowsTargetPlatformMinVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <PackageCertificateThumbprint>0071016DCE22933BB0F19305D78E0794B55121C8</PackageCertificateThumbprint>
-    <PackageCertificateKeyFile>TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>466763FE9F823DB64420FD37EAE5C29043299645</PackageCertificateThumbprint>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -83,6 +82,7 @@
   <PropertyGroup>
     <!-- Enable generating msix package in local build -->
     <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</OutDir>
@@ -115,6 +115,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Zen\.conan\data\Eigen\3.3.0\rtg\stable\package\7bd6f2c3d5c4e48a75805376b58cde753392f711\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">C:\Users\Zen\.conan\data\Eigen\3.3.0\rtg\stable\package\7bd6f2c3d5c4e48a75805376b58cde753392f711\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -159,6 +160,7 @@
     <AppxManifest Include="Package.appxmanifest" Condition="'$(LinkCompiled)'!='false'">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="BasicXrApp_uwp_TemporaryKey.pfx" />
     <None Include="TemporaryKey.pfx" />
     <None Include="packages.config" />
   </ItemGroup>

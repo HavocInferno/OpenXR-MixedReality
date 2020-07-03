@@ -58,5 +58,6 @@
     </None>
     <None Include="packages.config" />
     <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="BasicXrApp_uwp_TemporaryKey.pfx" />
   </ItemGroup>
 </Project>
