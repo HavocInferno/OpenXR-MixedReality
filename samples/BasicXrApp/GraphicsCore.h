@@ -176,11 +176,12 @@ private:
 
     bool CreateFrameBuffer(int nWidth,
                            int nHeight,
-                           winrt::com_ptr<ID3D12Resource>& framebufferColorTexture,
-                           CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle,
-                           winrt::com_ptr<ID3D12Resource>& framebufferDepthStencil,
-                           CD3DX12_CPU_DESCRIPTOR_HANDLE depthStencilViewHandle,
-                           RTVIndex_t nRTVIndex); 
+                           int viewCount,
+                           ID3D12Resource* framebufferColorTexture,
+                           CD3DX12_CPU_DESCRIPTOR_HANDLE& renderTargetViewHandle,
+                           ID3D12Resource* framebufferDepthStencil,
+                           CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle,
+                           RTVIndex_t nRTVIndex);
     bool RenderScene(int eyeIndex); 
     bool RenderStereoTargets(const XrRect2Di& imageRect, ID3D12Resource* colorTexture, ID3D12Resource* depthTexture);
 

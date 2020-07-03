@@ -390,7 +390,7 @@ bool GraphicsCore::SetupCameras() {
     return true;
 }
 
-bool GraphicsCore::SetupStereoRenderTargets() {
+bool GraphicsCore::SetupStereoRenderTargets(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
     // TODO: replace this with openxr based check?
     /*if (!m_pHMD)
         return;*/
@@ -400,9 +400,24 @@ bool GraphicsCore::SetupStereoRenderTargets() {
     //m_nRenderWidth = (uint32_t)(m_flSuperSampleScale * (float)m_nRenderWidth);
     //m_nRenderHeight = (uint32_t)(m_flSuperSampleScale * (float)m_nRenderHeight);
 
-    // TODO: hand over necessary args
-    CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_leftEyeDesc, RTV_LEFT_EYE);
-    CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, m_rightEyeDesc, RTV_RIGHT_EYE);
+    for (int i = 0; i < renderresc->ColorSwapchain.Images.size(); i++) {
+        CreateFrameBuffer(renderresc->ConfigViews[0].recommendedImageRectWidth,
+                          renderresc->ConfigViews[0].recommendedImageRectHeight,
+                          renderresc->ColorSwapchain.ArraySize,
+                          renderresc->ColorSwapchain.Images[i].texture,
+                          renderresc->ColorSwapchain.ViewHandles[i],
+                          renderresc->DepthSwapchain.Images[i].texture,
+                          renderresc->DepthSwapchain.ViewHandles[i],
+                          RTV_LEFT_EYE);
+        /*CreateFrameBuffer(renderresc->ConfigViews[0].recommendedImageRectWidth,
+                          renderresc->ConfigViews[0].recommendedImageRectHeight,
+                          renderresc->ColorSwapchain.ArraySize,
+                          renderresc->ColorSwapchain.Images[i].texture,
+                          renderresc->ColorSwapchain.ViewHandles[i],
+                          renderresc->DepthSwapchain.Images[i].texture,
+                          renderresc->DepthSwapchain.ViewHandles[i],
+                          RTV_RIGHT_EYE);*/
+    }
     
     return true;
 }
@@ -551,11 +566,12 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
 }
 
 bool GraphicsCore::CreateFrameBuffer(int nWidth,
-                       int nHeight,
-                       winrt::com_ptr<ID3D12Resource>& framebufferColorTexture,
-                       CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle,
-                       winrt::com_ptr<ID3D12Resource>& framebufferDepthStencil,
-                       CD3DX12_CPU_DESCRIPTOR_HANDLE depthStencilViewHandle,
+                       int nHeight, 
+                       int viewCount,
+                       ID3D12Resource* framebufferColorTexture,
+                       CD3DX12_CPU_DESCRIPTOR_HANDLE& renderTargetViewHandle,
+                       ID3D12Resource* framebufferDepthStencil,
+                       CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle,
                        RTVIndex_t nRTVIndex) {
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
@@ -563,12 +579,12 @@ bool GraphicsCore::CreateFrameBuffer(int nWidth,
     textureDesc.Width = nWidth;
     textureDesc.Height = nHeight;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    textureDesc.DepthOrArraySize = 1;
+    textureDesc.DepthOrArraySize = viewCount;
     textureDesc.SampleDesc.Count = m_nMSAASampleCount;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    const float clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
 
     // Create color target
     m_pDevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -576,17 +592,17 @@ bool GraphicsCore::CreateFrameBuffer(int nWidth,
                                        &textureDesc,
                                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                        &CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, clearColor),
-                                       IID_PPV_ARGS(framebufferColorTexture.put()));
+                                       IID_PPV_ARGS(&framebufferColorTexture));
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart());
     rtvHandle.Offset(nRTVIndex, m_nRTVDescriptorSize);
-    m_pDevice->CreateRenderTargetView(framebufferColorTexture.get(), nullptr, rtvHandle);
+    m_pDevice->CreateRenderTargetView(framebufferColorTexture, nullptr, rtvHandle);
     renderTargetViewHandle = rtvHandle;
 
     // Create shader resource view
     CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
     srvHandle.Offset(SRV_LEFT_EYE + nRTVIndex, m_nCBVSRVDescriptorSize);
-    m_pDevice->CreateShaderResourceView(framebufferColorTexture.get(), nullptr, srvHandle);
+    m_pDevice->CreateShaderResourceView(framebufferColorTexture, nullptr, srvHandle);
 
     // Create depth
     D3D12_RESOURCE_DESC depthDesc = textureDesc;
@@ -597,11 +613,11 @@ bool GraphicsCore::CreateFrameBuffer(int nWidth,
                                        &depthDesc,
                                        D3D12_RESOURCE_STATE_DEPTH_WRITE,
                                        &CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D32_FLOAT, 1.0f, 0),
-                                       IID_PPV_ARGS(framebufferDepthStencil.put()));
+                                       IID_PPV_ARGS(&framebufferDepthStencil));
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_pDSVHeap->GetCPUDescriptorHandleForHeapStart());
     dsvHandle.Offset(nRTVIndex, m_nDSVDescriptorSize);
-    m_pDevice->CreateDepthStencilView(framebufferDepthStencil.get(), nullptr, dsvHandle);
+    m_pDevice->CreateDepthStencilView(framebufferDepthStencil, nullptr, dsvHandle);
     depthStencilViewHandle = dsvHandle;
     return true;
 }
