@@ -441,6 +441,7 @@ namespace {
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(), 0, &chainLength, nullptr));
 
             swapchain.Images.resize(chainLength, {XR_TYPE_SWAPCHAIN_IMAGE_D3D12_KHR});
+            swapchain.ViewHandles.resize(chainLength); 
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(),
                                                    (uint32_t)swapchain.Images.size(),
                                                    &chainLength,
