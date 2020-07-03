@@ -818,7 +818,9 @@ namespace {
                                          colorSwapchain.Images[colorSwapchainImageIndex].texture,
                                          depthSwapchain.Format,
                                          depthSwapchain.Images[depthSwapchainImageIndex].texture,
-                                         visibleCubes);
+                                         visibleCubes,
+                                         colorSwapchain.ViewHandles[colorSwapchainImageIndex],
+                                         depthSwapchain.ViewHandles[colorSwapchainImageIndex]);
 
             XrSwapchainImageReleaseInfo releaseInfo{XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};
             CHECK_XRCMD(xrReleaseSwapchainImage(colorSwapchain.Handle.Get(), &releaseInfo));

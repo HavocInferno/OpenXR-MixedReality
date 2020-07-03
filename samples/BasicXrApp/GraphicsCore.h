@@ -158,7 +158,9 @@ public:
                             ID3D12Resource* colorTexture,
                             DXGI_FORMAT depthSwapchainFormat,
                             ID3D12Resource* depthTexture,
-                            const std::vector<const sample::Cube*>& cubes) override;
+                            const std::vector<const sample::Cube*>& cubes,
+                            CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
+                            CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) override;
 
 private:
     bool InitializeD3D12Device(LUID adapterLuid);

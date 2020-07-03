@@ -692,7 +692,9 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
                               ID3D12Resource* colorTexture,
                               DXGI_FORMAT depthSwapchainFormat,
                               ID3D12Resource* depthTexture,
-                              const std::vector<const sample::Cube*>& cubes) {
+                              const std::vector<const sample::Cube*>& cubes,
+                              CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
+                              CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) {
     //adapted from CMainApplication::RenderFrame
     if (true /*hmd present*/) 
     {

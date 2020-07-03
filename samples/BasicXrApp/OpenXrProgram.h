@@ -72,7 +72,9 @@ namespace sample {
                                 ID3D12Resource* colorTexture,
                                 DXGI_FORMAT depthSwapchainFormat,
                                 ID3D12Resource* depthTexture,
-                                const std::vector<const sample::Cube*>& cubes) = 0;
+                                const std::vector<const sample::Cube*>& cubes,
+                                CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
+                                CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) = 0;
 
     public:
         winrt::com_ptr<ID3D12Device> m_pDevice;
