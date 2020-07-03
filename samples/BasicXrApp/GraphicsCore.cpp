@@ -649,7 +649,11 @@ bool GraphicsCore::RenderScene(int eyeIndex) {
     return true;
 }
 
-bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect, ID3D12Resource* colorTexture, ID3D12Resource* depthTexture) {
+bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect,
+                                       ID3D12Resource* colorTexture,
+                                       ID3D12Resource* depthTexture,
+                                       CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
+                                       CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) {
     D3D12_VIEWPORT viewport = {0.0f, 0.0f, (FLOAT)imageRect.extent.width, (FLOAT)imageRect.extent.height, 0.0f, 1.0f};
     D3D12_RECT scissor = {0, 0, (LONG)imageRect.extent.width, (LONG)imageRect.extent.height};
 
@@ -664,40 +668,21 @@ bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect, ID3D12Resourc
                                     &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
                                                                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                                           D3D12_RESOURCE_STATE_RENDER_TARGET));
-    m_pCommandList->OMSetRenderTargets(1, &m_leftEyeDesc.m_renderTargetViewHandle, FALSE, &m_leftEyeDesc.m_depthStencilViewHandle); //TODO
+    m_pCommandList->OMSetRenderTargets(1, &colorHandle, FALSE, &depthHandle); // TODO
 
-    const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
-    m_pCommandList->ClearRenderTargetView(m_leftEyeDesc.m_renderTargetViewHandle, clearColor, 0, nullptr);
-    m_pCommandList->ClearDepthStencilView(m_leftEyeDesc.m_depthStencilViewHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, 0, nullptr);
+    const float clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
+    m_pCommandList->ClearRenderTargetView(colorHandle, clearColor, 0, nullptr);
+    m_pCommandList->ClearDepthStencilView(depthHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, 0, nullptr);
 
     RenderScene(0); //left eye = 0
-
-    // Transition to SHADER_RESOURCE to submit to SteamVR
-    //m_pCommandList->ResourceBarrier(1,
-    //                                &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
-    //                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
-    //                                                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-    //-----------//
-    // Right Eye //
-    //-----------//
-    // Transition to RENDER_TARGET
-    //m_pCommandList->ResourceBarrier(1,
-    //                                &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
-    //                                                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-    //                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET));
-    m_pCommandList->OMSetRenderTargets(1, &m_rightEyeDesc.m_renderTargetViewHandle, FALSE, &m_rightEyeDesc.m_depthStencilViewHandle); //TODO
-
-    m_pCommandList->ClearRenderTargetView(m_rightEyeDesc.m_renderTargetViewHandle, clearColor, 0, nullptr);
-    m_pCommandList->ClearDepthStencilView(m_rightEyeDesc.m_depthStencilViewHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, 0, nullptr);
-
-    RenderScene(1); // left eye = 1
 
     // Transition to SHADER_RESOURCE to submit to SteamVR
     m_pCommandList->ResourceBarrier(1,
                                     &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
                                                                           D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+    return true; 
 }
 
 void GraphicsCore::RenderView(const XrRect2Di& imageRect,
@@ -720,7 +705,7 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
         m_pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
         //UpdateControllerAxes();
-        RenderStereoTargets(imageRect, colorTexture, depthTexture);
+        RenderStereoTargets(imageRect, colorTexture, depthTexture, colorHandle, depthHandle);
         //RenderCompanionWindow();
 
         m_pCommandList->Close();
