@@ -143,7 +143,9 @@ struct VertexDataScene {
 class GraphicsCore : public sample::IGraphicsPluginD3D12 {
 public:
     // Inherited via IGraphicsPluginD3D12
-    ID3D12Device* InitializeD3D12(LUID adapterLuid) override;
+    ID3D12Device* InitializeD3D12(LUID adapterLuid, std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) override;
+
+    void InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) override; 
 
     const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override;
 
@@ -162,12 +164,12 @@ private:
     bool InitializeD3D12Device(LUID adapterLuid);
 
     // D3D resource setup functions
-    bool InitializeD3DResources();
+    bool InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc);
 
     bool SetupTexturemaps();
     bool SetupScene();
     bool SetupCameras();
-    bool SetupStereoRenderTargets();
+    bool SetupStereoRenderTargets(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc);
     bool SetupRenderModels();
 
     bool GenMipMapRGBA(const UINT8* pSrc, UINT8** ppDst, int nSrcWidth, int nSrcHeight, int* pDstWidthOut, int* pDstHeightOut); 

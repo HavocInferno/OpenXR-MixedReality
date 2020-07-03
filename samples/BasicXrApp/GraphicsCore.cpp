@@ -60,14 +60,14 @@ bool GraphicsCore::InitializeD3D12Device(LUID adapterLuid) {
     return true;
 }
 
-ID3D12Device* GraphicsCore::InitializeD3D12(LUID adapterLuid) {
+ID3D12Device* GraphicsCore::InitializeD3D12(LUID adapterLuid, std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
     bool ret = InitializeD3D12Device(adapterLuid);
-    ret = InitializeD3DResources();
+    ret = InitializeD3DResources(renderresc);
 
     return m_pDevice.get();
 }
 
-bool GraphicsCore::InitializeD3DResources() {
+bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
     /*
     adapted from former DX11 resource init
 
@@ -218,10 +218,10 @@ bool GraphicsCore::InitializeD3DResources() {
                                  m_pScenePipelineState.get(),
                                  IID_PPV_ARGS(m_pCommandList.put()));
 
-    SetupTexturemaps();
+    /*SetupTexturemaps();
     SetupScene(); 
     //SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip HelloVR's variant of getting view projection matrices
-    SetupStereoRenderTargets(); 
+    SetupStereoRenderTargets(renderresc); 
     //SetupCompanionWindow(); //TODO: exclude companion window items for now
     SetupRenderModels(); 
 
@@ -234,9 +234,30 @@ bool GraphicsCore::InitializeD3DResources() {
     m_pCommandQueue->Signal(m_pFence.get(), m_nFenceValues[m_nFrameIndex]);
     m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
     WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-    m_nFenceValues[m_nFrameIndex]++;
+    m_nFenceValues[m_nFrameIndex]++;*/
 
     return true;
+}
+
+void GraphicsCore::InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
+    SetupTexturemaps();
+    SetupScene();
+    // SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
+    // HelloVR's variant of getting view projection matrices
+    SetupStereoRenderTargets(renderresc);
+    // SetupCompanionWindow(); //TODO: exclude companion window items for now
+    SetupRenderModels();
+
+    // Do any work that was queued up during loading
+    m_pCommandList->Close();
+    ID3D12CommandList* ppCommandLists[] = {m_pCommandList.get()};
+    m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    // Wait for it to finish
+    m_pCommandQueue->Signal(m_pFence.get(), m_nFenceValues[m_nFrameIndex]);
+    m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
+    WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+    m_nFenceValues[m_nFrameIndex]++;
 }
 
 bool GraphicsCore::SetupTexturemaps() {

@@ -261,7 +261,7 @@ namespace {
                                 featureLevels.end());
             CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
 
-            ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid); 
+            ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid, m_renderResources); 
 
             XrGraphicsBindingD3D12KHR graphicsBinding;
             if (!m_xrD3D11Fallback) {
@@ -285,6 +285,7 @@ namespace {
 
             CreateSpaces();
             CreateSwapchains();
+            m_graphicsPlugin->InitializeResources2(m_renderResources);
         }
 
         void CreateSpaces() {
