@@ -52,3 +52,5 @@
 #include <XrUtility/XrExtensions.h>
 
 #include <winrt/base.h> // winrt::com_ptr
+
+#include "Eigen/Geometry"
