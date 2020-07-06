@@ -763,6 +763,10 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     }
 }
 
+void GraphicsCore::SetClearColor(Eigen::Vector4f& newcol) {
+    m_debugClearColor = newcol;
+}
+
 namespace sample {
     std::unique_ptr<sample::IGraphicsPluginD3D12> CreateGraphicsCore() {
         return std::make_unique<GraphicsCore>();

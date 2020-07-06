@@ -164,6 +164,7 @@ public:
                                      DXGI_FORMAT framebufferDepthStencilFormat,
                                      CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle) override;
 
+    void SetClearColor(Eigen::Vector4f& newcol) override;
 
 private:
     bool InitializeD3D12Device(LUID adapterLuid);

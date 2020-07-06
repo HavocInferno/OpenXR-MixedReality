@@ -608,6 +608,15 @@ namespace {
                     }
 
                     ApplyVibration();
+
+                    // DEBUG purposes only //briefly change RT clear color for click
+                    if (side == LeftSide) {
+                        Eigen::Vector4f newcol(0.0f, 1.0f, 0.0f, 1.0f);
+                        m_graphicsPlugin->SetClearColor(newcol);
+                    } else {
+                        Eigen::Vector4f newcol(0.0f, 0.0f, 1.0f, 1.0f);
+                        m_graphicsPlugin->SetClearColor(newcol);
+                    }
                 }
 
                 // This sample, when menu button is released, requests to quit the session, and therefore quit the application.

@@ -85,6 +85,8 @@ namespace sample {
                                 CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
                                 CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) = 0;
 
+        virtual void SetClearColor(Eigen::Vector4f& newcol) = 0;
+
     public:
         winrt::com_ptr<ID3D12Device> m_pDevice;
         winrt::com_ptr<ID3D12CommandQueue> m_pCommandQueue;
