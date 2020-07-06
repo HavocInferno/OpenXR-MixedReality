@@ -131,10 +131,10 @@ bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram
         m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.put()));
 
         D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = NUM_RTVS * m_maxSwapchainLength;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pDSVHeap.put()));
+        dsvHeapDesc.NumDescriptors = NUM_RTVS * m_maxSwapchainLength;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        m_pDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(m_pDSVHeap.put()));
 
         D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
         cbvSrvHeapDesc.NumDescriptors = NUM_SRV_CBVS;
