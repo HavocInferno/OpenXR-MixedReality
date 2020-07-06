@@ -109,13 +109,7 @@ namespace CubeShader {
 } // namespace CubeShader
 
 // Slots in the RenderTargetView descriptor heap
-enum RTVIndex_t { 
-    RTV_LEFT_EYE = 0, 
-    RTV_RIGHT_EYE, 
-    RTV_SWAPCHAIN0, 
-    RTV_SWAPCHAIN1, 
-    NUM_RTVS 
-};
+enum RTVIndex_t { RTV_LEFT_EYE = 0, RTV_RIGHT_EYE, NUM_RTVS };
 
 // Slots in the ConstantBufferView/ShaderResourceView descriptor heap
 enum CBVSRVIndex_t {
@@ -161,6 +155,15 @@ public:
                             const std::vector<const sample::Cube*>& cubes,
                             CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
                             CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) override;
+    bool SetStereoFramebufferHandles(unsigned int viewCount,
+                                     unsigned int swapchainIndex,
+                                     ID3D12Resource* framebufferColorTexture,
+                                     DXGI_FORMAT framebufferColorFormat,
+                                     CD3DX12_CPU_DESCRIPTOR_HANDLE& renderTargetViewHandle,
+                                     ID3D12Resource* framebufferDepthStencil,
+                                     DXGI_FORMAT framebufferDepthStencilFormat,
+                                     CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle) override;
+
 
 private:
     bool InitializeD3D12Device(LUID adapterLuid);
@@ -171,21 +174,13 @@ private:
     bool SetupTexturemaps();
     bool SetupScene();
     bool SetupCameras();
-    bool SetupStereoRenderTargets(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc);
+    bool SetupStereoRenderTargets();
     bool SetupRenderModels();
 
     bool GenMipMapRGBA(const UINT8* pSrc, UINT8** ppDst, int nSrcWidth, int nSrcHeight, int* pDstWidthOut, int* pDstHeightOut); 
     bool AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata); 
     bool AddCubeToScene(Eigen::Matrix4f mat, std::vector<float>& vertdata); 
 
-    bool CreateFrameBuffer(int nWidth,
-                           int nHeight,
-                           int viewCount,
-                           ID3D12Resource* framebufferColorTexture,
-                           CD3DX12_CPU_DESCRIPTOR_HANDLE& renderTargetViewHandle,
-                           ID3D12Resource* framebufferDepthStencil,
-                           CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle,
-                           RTVIndex_t nRTVIndex);
     bool RenderScene(int eyeIndex); 
     bool RenderStereoTargets(const XrRect2Di& imageRect,
                              ID3D12Resource* colorTexture,
@@ -213,4 +208,6 @@ private:
     // float m_fFarClip = 30.0f;
 
     unsigned int m_uiVertcount = 0;
+
+    Eigen::Vector4f m_debugClearColor = {1.0f, 0.0f, 0.0f, 1.0f};
 };

@@ -64,6 +64,15 @@ namespace sample {
         virtual const std::vector<DXGI_FORMAT>& SupportedColorFormats() const = 0;
         virtual const std::vector<DXGI_FORMAT>& SupportedDepthFormats() const = 0;
 
+        virtual bool SetStereoFramebufferHandles(unsigned int viewCount,
+                                                 unsigned int swapchainIndex,
+                                                 ID3D12Resource* framebufferColorTexture,
+                                                 DXGI_FORMAT framebufferColorFormat,
+                                                 CD3DX12_CPU_DESCRIPTOR_HANDLE& renderTargetViewHandle,
+                                                 ID3D12Resource* framebufferDepthStencil,
+                                                 DXGI_FORMAT framebufferDepthStencilFormat,
+                                                 CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle) = 0;
+
         // Render to swapchain images using stereo image array
         virtual void RenderView(const XrRect2Di& imageRect,
                                 const float renderTargetClearColor[4],
@@ -89,6 +98,7 @@ namespace sample {
         static const int g_nFrameCount = 2; // Swapchain depth //TODO: exclude companion window items for now, this too?
         // uint32_t m_nCompanionWindowWidth; //TODO: exclude companion window items for now
         // uint32_t m_nCompanionWindowHeight; //TODO: exclude companion window items for now
+        const int m_maxSwapchainLength = 3;
         UINT m_nRTVDescriptorSize;
         UINT m_nDSVDescriptorSize;
         UINT m_nCBVSRVDescriptorSize;

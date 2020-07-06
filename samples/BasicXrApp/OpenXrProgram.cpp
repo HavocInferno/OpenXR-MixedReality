@@ -408,6 +408,18 @@ namespace {
 
             // Preallocate view buffers for xrLocateViews later inside frame loop.
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
+
+            //
+            for (int i = 0; i < m_renderResources->ColorSwapchain.Images.size(); i++) {
+                m_graphicsPlugin->SetStereoFramebufferHandles(m_renderResources->ColorSwapchain.ArraySize,
+                                                              i,
+                                                              m_renderResources->ColorSwapchain.Images[i].texture,
+                                                              colorSwapchainFormat,
+                                                              m_renderResources->ColorSwapchain.ViewHandles[i],
+                                                              m_renderResources->DepthSwapchain.Images[i].texture,
+                                                              depthSwapchainFormat,
+                                                              m_renderResources->DepthSwapchain.ViewHandles[i]);
+            }
         }
 
         SwapchainD3D12 CreateSwapchainD3D12(XrSession session,
@@ -440,6 +452,7 @@ namespace {
             uint32_t chainLength;
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(), 0, &chainLength, nullptr));
 
+            chainLength = std::min((int)chainLength, m_graphicsPlugin->m_maxSwapchainLength);
             swapchain.Images.resize(chainLength, {XR_TYPE_SWAPCHAIN_IMAGE_D3D12_KHR});
             swapchain.ViewHandles.resize(chainLength); 
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(),
