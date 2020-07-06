@@ -143,18 +143,8 @@ public:
 
     const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override;
 
-    const std::vector<DXGI_FORMAT>& SupportedDepthFormats() const override; 
+    const std::vector<DXGI_FORMAT>& SupportedDepthFormats() const override;
 
-    virtual void RenderView(const XrRect2Di& imageRect,
-                            const float renderTargetClearColor[4],
-                            const std::vector<xr::math::ViewProjection>& viewProjections,
-                            DXGI_FORMAT colorSwapchainFormat,
-                            ID3D12Resource* colorTexture,
-                            DXGI_FORMAT depthSwapchainFormat,
-                            ID3D12Resource* depthTexture,
-                            const std::vector<const sample::Cube*>& cubes,
-                            CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
-                            CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) override;
     bool SetStereoFramebufferHandles(unsigned int viewCount,
                                      unsigned int swapchainIndex,
                                      ID3D12Resource* framebufferColorTexture,
@@ -163,6 +153,17 @@ public:
                                      ID3D12Resource* framebufferDepthStencil,
                                      DXGI_FORMAT framebufferDepthStencilFormat,
                                      CD3DX12_CPU_DESCRIPTOR_HANDLE& depthStencilViewHandle) override;
+
+    void RenderView(const XrRect2Di& imageRect,
+                    const float renderTargetClearColor[4],
+                    const std::vector<xr::math::ViewProjection>& viewProjections,
+                    DXGI_FORMAT colorSwapchainFormat,
+                    ID3D12Resource* colorTexture,
+                    DXGI_FORMAT depthSwapchainFormat,
+                    ID3D12Resource* depthTexture,
+                    const std::vector<const sample::Cube*>& cubes,
+                    CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
+                    CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) override;
 
     void SetClearColor(Eigen::Vector4f& newcol) override;
 

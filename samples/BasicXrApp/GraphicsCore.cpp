@@ -22,8 +22,6 @@
 
 #include "shared/lodepng.h"
 
-
-
 bool GraphicsCore::InitializeD3D12Device(LUID adapterLuid) {
     /*
     adapted from Valve HelloVR DX12 sample
@@ -219,11 +217,11 @@ bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram
                                  IID_PPV_ARGS(m_pCommandList.put()));
 
     /*SetupTexturemaps();
-    SetupScene(); 
-    //SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip HelloVR's variant of getting view projection matrices
-    SetupStereoRenderTargets(renderresc); 
+    SetupScene();
+    //SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
+    HelloVR's variant of getting view projection matrices SetupStereoRenderTargets(renderresc);
     //SetupCompanionWindow(); //TODO: exclude companion window items for now
-    SetupRenderModels(); 
+    SetupRenderModels();
 
     // Do any work that was queued up during loading
     m_pCommandList->Close();
@@ -243,9 +241,8 @@ void GraphicsCore::InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::
     SetupTexturemaps();
     SetupScene();
     // SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
-    // HelloVR's variant of getting view projection matrices
-    SetupStereoRenderTargets(renderresc);
-    // SetupCompanionWindow(); //TODO: exclude companion window items for now
+    // HelloVR's variant of getting view projection matrices SetupStereoRenderTargets(); SetupCompanionWindow(); //TODO: exclude companion
+    // window items for now
     SetupRenderModels();
 
     // Do any work that was queued up during loading
@@ -691,8 +688,6 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     }
 
     UpdateHMDMatrixPose();*/
-
-
 
     //###################################################################
     const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
