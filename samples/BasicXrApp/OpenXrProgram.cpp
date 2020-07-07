@@ -21,11 +21,20 @@
 namespace {
     class ImplementOpenXrProgram : public sample::IOpenXrProgram {
     public:
+        //-----------------------------------------------------------------------------
+        // Tl;dr: ctor
+        //-----------------------------------------------------------------------------
         ImplementOpenXrProgram(std::string applicationName, std::unique_ptr<sample::IGraphicsPluginD3D12> graphicsPlugin)
             : m_applicationName(std::move(applicationName))
             , m_graphicsPlugin(std::move(graphicsPlugin)) {
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: OpenXrProgram main execution implementation
+        //      [creates and initializes OpenXR and D3D12, 
+        //       then executes the main input+render loop 
+        //       until restart or exit is requested]
+        //-----------------------------------------------------------------------------
         void Run() override {
             CreateInstance();
             CreateActions();
@@ -59,6 +68,17 @@ namespace {
         }
 
     private:
+#pragma region MajorFuncs
+
+#pragma endregion
+
+#pragma region MinorFuncs
+
+#pragma endregion
+
+        //-----------------------------------------------------------------------------
+        // Tl;dr: Creates OpenXR instance and checks for extension compatibility
+        //-----------------------------------------------------------------------------
         void CreateInstance() {
             CHECK(m_instance.Get() == XR_NULL_HANDLE);
 
@@ -77,6 +97,9 @@ namespace {
             m_extensions.PopulateDispatchTable(m_instance.Get());
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: enumerates and checks necessary OpenXR extensions
+        //-----------------------------------------------------------------------------
         std::vector<const char*> SelectExtensions() {
             // Fetch the list of extensions supported by the runtime.
             uint32_t extensionCount;
@@ -114,6 +137,9 @@ namespace {
             return enabledExtensions;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: create OpenXR action set, actions and default bindings
+        //-----------------------------------------------------------------------------
         void CreateActions() {
             CHECK(m_instance.Get() != XR_NULL_HANDLE);
 
@@ -196,6 +222,9 @@ namespace {
             }
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: initialize OpenXR system and env blend mode
+        //-----------------------------------------------------------------------------
         void InitializeSystem() {
             CHECK(m_instance.Get() != XR_NULL_HANDLE);
             CHECK(m_systemId == XR_NULL_SYSTEM_ID);
@@ -235,6 +264,9 @@ namespace {
             m_nearFar = {20.f, 0.1f};
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: initialize D3D12, then initialize OpenXR session, spaces and swapchain
+        //-----------------------------------------------------------------------------
         void InitializeSession() {
             CHECK(m_instance.Get() != XR_NULL_HANDLE);
             CHECK(m_systemId != XR_NULL_SYSTEM_ID);
@@ -261,7 +293,8 @@ namespace {
                                 featureLevels.end());
             CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
 
-            ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid, m_renderResources); 
+            // Initialize D3D12 in here
+            ID3D12Device* device = m_graphicsPlugin->InitializeD3D12(graphicsRequirements.adapterLuid); 
 
             XrGraphicsBindingD3D12KHR graphicsBinding;
             if (!m_xrD3D11Fallback) {
@@ -285,9 +318,11 @@ namespace {
 
             CreateSpaces();
             CreateSwapchains();
-            m_graphicsPlugin->InitializeResources2(m_renderResources);
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: create OpenXR spaces [aka reference/action spaces to quantify XR tracking]
+        //-----------------------------------------------------------------------------
         void CreateSpaces() {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
 
@@ -317,6 +352,9 @@ namespace {
             }
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: return best match swapchain pixel format
+        //-----------------------------------------------------------------------------
         std::tuple<DXGI_FORMAT, DXGI_FORMAT> SelectSwapchainPixelFormats() {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
 
@@ -347,6 +385,14 @@ namespace {
             return {colorSwapchainFormat, depthSwapchainFormat};
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: create OpenXR swapchains 
+        //      [note: this actually creates and returns the entire XR swapchain 
+        //       compatible with the defined graphics API, including framebuffer memory, 
+        //       format etc each for RenderTarget and DepthStencil. 
+        //       In the case of D3D12, only the RT/DS view handles need to be created 
+        //       after the fact.]
+        //-----------------------------------------------------------------------------
         void CreateSwapchains() {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
             CHECK(m_renderResources == nullptr);
@@ -409,7 +455,7 @@ namespace {
             // Preallocate view buffers for xrLocateViews later inside frame loop.
             m_renderResources->Views.resize(viewCount, {XR_TYPE_VIEW});
 
-            //
+            // set D3D12 RenderTarget/DepthStencil view handles for each swapchain image
             for (int i = 0; i < m_renderResources->ColorSwapchain.Images.size(); i++) {
                 m_graphicsPlugin->SetStereoFramebufferHandles(m_renderResources->ColorSwapchain.ArraySize,
                                                               i,
@@ -422,6 +468,9 @@ namespace {
             }
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: Creates a D3D12 swapchain using OpenXR swapchain enumerator
+        //-----------------------------------------------------------------------------
         SwapchainD3D12 CreateSwapchainD3D12(XrSession session,
                                             DXGI_FORMAT format,
                                             uint32_t width,
@@ -452,7 +501,7 @@ namespace {
             uint32_t chainLength;
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(), 0, &chainLength, nullptr));
 
-            chainLength = std::min((int)chainLength, m_graphicsPlugin->m_maxSwapchainLength);
+            chainLength = m_graphicsPlugin->m_actualSwapchainLength = std::min((int)chainLength, m_graphicsPlugin->m_maxSwapchainLength);
             swapchain.Images.resize(chainLength, {XR_TYPE_SWAPCHAIN_IMAGE_D3D12_KHR});
             swapchain.ViewHandles.resize(chainLength); 
             CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.Handle.Get(),
@@ -463,6 +512,9 @@ namespace {
             return swapchain;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: process OpenXR events [mainly to track XR session state]
+        //-----------------------------------------------------------------------------
         void ProcessEvents(bool* exitRenderLoop, bool* requestRestart) {
             *exitRenderLoop = *requestRestart = false;
 
@@ -524,6 +576,10 @@ namespace {
         }
 
         struct Hologram;
+        //-----------------------------------------------------------------------------
+        // Tl;dr: create hololens hologram 
+        //      (aka just an object in OpenXR space with a spatial anchor attached)
+        //-----------------------------------------------------------------------------
         Hologram CreateHologram(const XrPosef& poseInScene, XrTime placementTime) const {
             Hologram hologram{};
             if (m_optionalExtensions.SpatialAnchorSupported) {
@@ -557,6 +613,11 @@ namespace {
             return hologram;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: process OpenXR input/actions
+        //      [simple polling scheme, 
+        //       checks the value/state of defined actions and executes functions in response]
+        //-----------------------------------------------------------------------------
         void PollActions() {
             // Get updated action states.
             std::vector<XrActiveActionSet> activeActionSets = {{m_actionSet.Get(), XR_NULL_PATH}};
@@ -635,6 +696,11 @@ namespace {
             }
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: render XR frame
+        //      [first updates XR view info to get updated camera info, 
+        //       renders projection layer, then composits and ends frame]
+        //-----------------------------------------------------------------------------
         void RenderFrame() {
             CHECK(m_session.Get() != XR_NULL_HANDLE);
 
@@ -697,6 +763,9 @@ namespace {
             CHECK_XRCMD(xrEndFrame(m_session.Get(), &frameEndInfo));
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: blocking OpenXR swapchain image acquire, returns image index
+        //-----------------------------------------------------------------------------
         uint32_t AquireAndWaitForSwapchainImage(XrSwapchain handle) {
             uint32_t swapchainImageIndex;
             XrSwapchainImageAcquireInfo acquireInfo{XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO};
@@ -709,6 +778,9 @@ namespace {
             return swapchainImageIndex;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: spins central cube [part of BasicXrApp demo visualization]
+        //-----------------------------------------------------------------------------
         void UpdateSpinningCube(XrTime predictedDisplayTime) {
             if (!m_mainCubeIndex) {
                 // Initialize a big cube 1 meter in front of user.
@@ -748,6 +820,12 @@ namespace {
             }
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: render OpenXR projection layer
+        //      [updates demo cubes/spinning cube, 
+        //       updates camera projection matrices, 
+        //       then has graphics plugin render the actual view(s)
+        //-----------------------------------------------------------------------------
         bool RenderLayer(XrTime predictedDisplayTime, XrCompositionLayerProjection& layer) {
             const uint32_t viewCount = (uint32_t)m_renderResources->ConfigViews.size();
 
@@ -855,7 +933,11 @@ namespace {
             return true;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: resets resources so session can be restarted cleanly
+        //-----------------------------------------------------------------------------
         void PrepareSessionRestart() {
+            //TODO: reset resources added from HelloVR/D3D12 adaption
             m_mainCubeIndex = m_spinningCubeIndex = {};
             m_holograms.clear();
             m_renderResources.reset();
@@ -863,10 +945,16 @@ namespace {
             m_systemId = XR_NULL_SYSTEM_ID;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: ...
+        //-----------------------------------------------------------------------------
         constexpr bool IsSessionFocused() const {
             return m_sessionState == XR_SESSION_STATE_FOCUSED;
         }
 
+        //-----------------------------------------------------------------------------
+        // Tl;dr: ...
+        //-----------------------------------------------------------------------------
         XrPath GetXrPath(const char* string) const {
             return xr::StringToPath(m_instance.Get(), string);
         }
@@ -926,6 +1014,9 @@ namespace {
 } // namespace
 
 namespace sample {
+    //-----------------------------------------------------------------------------
+    // Tl;dr: creates and returns an OpenXrProgram implementation ptr
+    //-----------------------------------------------------------------------------
     std::unique_ptr<sample::IOpenXrProgram> CreateOpenXrProgram(std::string applicationName,
                                                                 std::unique_ptr<sample::IGraphicsPluginD3D12> graphicsPlugin) {
         return std::make_unique<ImplementOpenXrProgram>(std::move(applicationName), std::move(graphicsPlugin));

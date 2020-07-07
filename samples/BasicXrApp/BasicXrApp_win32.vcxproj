@@ -101,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="shared\lodepng.cpp" />
     <ClInclude Include="GraphicsCore.h" />
+    <ClInclude Include="GraphicsPluginD3D12.h" />
     <ClInclude Include="pch.h" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

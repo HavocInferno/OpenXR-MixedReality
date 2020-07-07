@@ -137,9 +137,7 @@ struct VertexDataScene {
 class GraphicsCore : public sample::IGraphicsPluginD3D12 {
 public:
     // Inherited via IGraphicsPluginD3D12
-    ID3D12Device* InitializeD3D12(LUID adapterLuid, std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) override;
-
-    void InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) override; 
+    ID3D12Device* InitializeD3D12(LUID adapterLuid) override;
 
     const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override;
 
@@ -171,7 +169,8 @@ private:
     bool InitializeD3D12Device(LUID adapterLuid);
 
     // D3D resource setup functions
-    bool InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc);
+    bool InitializeD3DResources();
+    bool InitializeD3DResources2(); 
 
     bool SetupTexturemaps();
     bool SetupScene();
@@ -185,6 +184,7 @@ private:
 
     bool RenderScene(int eyeIndex); 
     bool RenderStereoTargets(const XrRect2Di& imageRect,
+                             const float renderTargetClearColor[4],
                              ID3D12Resource* colorTexture,
                              ID3D12Resource* depthTexture,
                              CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,

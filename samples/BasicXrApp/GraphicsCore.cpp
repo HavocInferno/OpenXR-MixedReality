@@ -22,6 +22,11 @@
 
 #include "shared/lodepng.h"
 
+
+
+//-----------------------------------------------------------------------------
+// Tl;dr: 
+//-----------------------------------------------------------------------------
 bool GraphicsCore::InitializeD3D12Device(LUID adapterLuid) {
     /*
     adapted from Valve HelloVR DX12 sample
@@ -58,14 +63,20 @@ bool GraphicsCore::InitializeD3D12Device(LUID adapterLuid) {
     return true;
 }
 
-ID3D12Device* GraphicsCore::InitializeD3D12(LUID adapterLuid, std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
+ID3D12Device* GraphicsCore::InitializeD3D12(LUID adapterLuid) {
     bool ret = InitializeD3D12Device(adapterLuid);
-    ret = InitializeD3DResources(renderresc);
+    ret = InitializeD3DResources();
 
     return m_pDevice.get();
 }
 
-bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
+bool GraphicsCore::InitializeD3DResources() {
     /*
     adapted from former DX11 resource init
 
@@ -142,7 +153,7 @@ bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram
     }
 
     // Create per-frame resources
-    for (int nFrame = 0; nFrame < g_nFrameCount; nFrame++) {
+    for (int nFrame = 0; nFrame < m_maxSwapchainLength; nFrame++) {
         if (FAILED(m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocators[nFrame].put())))) {
             sample::dx::dprintf("Failed to create command allocators.\n");
             return false;
@@ -234,10 +245,15 @@ bool GraphicsCore::InitializeD3DResources(std::unique_ptr<sample::IOpenXrProgram
     WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     m_nFenceValues[m_nFrameIndex]++;*/
 
+    InitializeD3DResources2();
+
     return true;
 }
 
-void GraphicsCore::InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::RenderResources>& renderresc) {
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
+bool GraphicsCore::InitializeD3DResources2() {
     SetupTexturemaps();
     SetupScene();
     // SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
@@ -255,11 +271,16 @@ void GraphicsCore::InitializeResources2(std::unique_ptr<sample::IOpenXrProgram::
     m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
     WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     m_nFenceValues[m_nFrameIndex]++;
+
+    return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::SetupTexturemaps() {
     std::string sExecutableDirectory = std::filesystem::current_path().string();
-    std::string strFullPath = sExecutableDirectory + "/tex/cube_texture.png"; 
+    std::string strFullPath = sExecutableDirectory + "/tex/cube_texture.png";
 
     std::vector<unsigned char> imageRGBA;
     unsigned nImageWidth, nImageHeight;
@@ -307,14 +328,10 @@ bool GraphicsCore::SetupTexturemaps() {
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    
-    auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT); 
-    m_pDevice->CreateCommittedResource(&heap_props,
-                                       D3D12_HEAP_FLAG_NONE,
-                                       &textureDesc,
-                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                       nullptr,
-                                       IID_PPV_ARGS(m_pTexture.put()));
+
+    auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    m_pDevice->CreateCommittedResource(
+        &heap_props, D3D12_HEAP_FLAG_NONE, &textureDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(m_pTexture.put()));
 
     // Create shader resource view
     CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
@@ -325,8 +342,8 @@ bool GraphicsCore::SetupTexturemaps() {
     const UINT64 nUploadBufferSize = GetRequiredIntermediateSize(m_pTexture.get(), 0, textureDesc.MipLevels);
 
     // Create the GPU upload buffer.
-    heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD); 
-    auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(nUploadBufferSize); 
+    heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(nUploadBufferSize);
     m_pDevice->CreateCommittedResource(&heap_props,
                                        D3D12_HEAP_FLAG_NONE,
                                        &resource_desc,
@@ -334,9 +351,10 @@ bool GraphicsCore::SetupTexturemaps() {
                                        nullptr,
                                        IID_PPV_ARGS(m_pTextureUploadHeap.put()));
 
-    UpdateSubresources(m_pCommandList.get(), m_pTexture.get(), m_pTextureUploadHeap.get(), 0, 0, (UINT)mipLevelData.size(), &mipLevelData[0]);
+    UpdateSubresources(
+        m_pCommandList.get(), m_pTexture.get(), m_pTextureUploadHeap.get(), 0, 0, (UINT)mipLevelData.size(), &mipLevelData[0]);
     auto resource_barrier =
-        CD3DX12_RESOURCE_BARRIER::Transition(m_pTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE); 
+        CD3DX12_RESOURCE_BARRIER::Transition(m_pTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     m_pCommandList->ResourceBarrier(1, &resource_barrier);
 
     // Free mip pointers
@@ -346,20 +364,23 @@ bool GraphicsCore::SetupTexturemaps() {
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::SetupScene() {
-    //TODO: replace this with openxr based check?
+    // TODO: replace this with openxr based check?
     /*if (!m_pHMD)
         return;*/
 
     std::vector<float> vertdataarray;
 
-    //add matrix of cubes
+    // add matrix of cubes
     Eigen::Affine3f matTransform = Eigen::Affine3f::Identity();
-    matTransform.matrix().array().rowwise() *= Eigen::RowVector4f(m_fScale, m_fScale, m_fScale, 1.0).array(); 
+    matTransform.matrix().array().rowwise() *= Eigen::RowVector4f(m_fScale, m_fScale, m_fScale, 1.0).array();
     matTransform.translate(Eigen::Vector3f(-((float)m_iSceneVolumeWidth * m_fScaleSpacing) / 2.f,
                                            -((float)m_iSceneVolumeHeight * m_fScaleSpacing) / 2.f,
-                                           -((float)m_iSceneVolumeDepth * m_fScaleSpacing) / 2.f)); 
-    
+                                           -((float)m_iSceneVolumeDepth * m_fScaleSpacing) / 2.f));
+
     for (int z = 0; z < m_iSceneVolumeDepth; z++) {
         for (int y = 0; y < m_iSceneVolumeHeight; y++) {
             for (int x = 0; x < m_iSceneVolumeWidth; x++) {
@@ -372,8 +393,8 @@ bool GraphicsCore::SetupScene() {
     }
     m_uiVertcount = (unsigned int)(vertdataarray.size()) / 5;
 
-    auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD); 
-    auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(float) * vertdataarray.size()); 
+    auto heap_props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(float) * vertdataarray.size());
     m_pDevice->CreateCommittedResource(&heap_props,
                                        D3D12_HEAP_FLAG_NONE,
                                        &resource_desc,
@@ -388,40 +409,24 @@ bool GraphicsCore::SetupScene() {
     m_pSceneVertexBuffer->Unmap(0, nullptr);
 
     m_sceneVertexBufferView.BufferLocation = m_pSceneVertexBuffer->GetGPUVirtualAddress();
-    m_sceneVertexBufferView.StrideInBytes = sizeof(VertexDataScene); //TODO: make sure this sizeof comes out as 3+2 floats
+    m_sceneVertexBufferView.StrideInBytes = sizeof(VertexDataScene); // TODO: make sure this sizeof comes out as 3+2 floats
     m_sceneVertexBufferView.SizeInBytes = sizeof(float) * (unsigned int)(vertdataarray.size());
 
     return true;
 }
 
-bool GraphicsCore::SetupCameras() {
-    //TODO: get projection matrices from openxr
-    //m_renderResources->Views[i].pose, m_renderResources->Views[i].fov, m_nearFar
-    //xr::math::ViewProjection
-    //ComposeProjectionMatrix(viewProjections[k].Fov, viewProjections[k].NearFar)
-    
-    //m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
-    //m_mat4ProjectionRight = GetHMDMatrixProjectionEye(vr::Eye_Right);
-    //m_mat4eyePosLeft = GetHMDMatrixPoseEye(vr::Eye_Left);
-    //m_mat4eyePosRight = GetHMDMatrixPoseEye(vr::Eye_Right);
-
-    return true;
-}
-
-bool GraphicsCore::SetupStereoRenderTargets() {
-    // TODO: replace this with openxr based check?
-    /*if (!m_pHMD)
-        return;*/
-
-    return true;
-}
-
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::SetupRenderModels() {
     // TODO: adapt from CMainApplication
 
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::GenMipMapRGBA(const UINT8* pSrc, UINT8** ppDst, int nSrcWidth, int nSrcHeight, int* pDstWidthOut, int* pDstHeightOut) {
     *pDstWidthOut = nSrcWidth / 2;
     if (*pDstWidthOut <= 0) {
@@ -471,6 +476,9 @@ bool GraphicsCore::GenMipMapRGBA(const UINT8* pSrc, UINT8** ppDst, int nSrcWidth
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata) {
     vertdata.push_back(fl0);
     vertdata.push_back(fl1);
@@ -481,6 +489,9 @@ bool GraphicsCore::AddCubeVertex(float fl0, float fl1, float fl2, float fl3, flo
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::AddCubeToScene(Eigen::Matrix4f mat, std::vector<float>& vertdata) {
     // Matrix4 mat( outermat.data() );
 
@@ -536,9 +547,12 @@ bool GraphicsCore::AddCubeToScene(Eigen::Matrix4f mat, std::vector<float>& vertd
     AddCubeVertex(G.x(), G.y(), G.z(), 0, 0, vertdata);
     AddCubeVertex(F.x(), F.y(), F.z(), 0, 1, vertdata);
 
-    return true; 
+    return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedColorFormats() const {
     const static std::vector<DXGI_FORMAT> SupportedColorFormats = {
         DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -549,6 +563,9 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedColorFormats() const {
     return SupportedColorFormats;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
     const static std::vector<DXGI_FORMAT> SupportedDepthFormats = {
         DXGI_FORMAT_D32_FLOAT,
@@ -559,6 +576,9 @@ const std::vector<DXGI_FORMAT>& GraphicsCore::SupportedDepthFormats() const {
     return SupportedDepthFormats;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::SetStereoFramebufferHandles(unsigned int viewCount,
                                                unsigned int swapchainIndex,
                                                ID3D12Resource* framebufferColorTexture,
@@ -589,13 +609,52 @@ bool GraphicsCore::SetStereoFramebufferHandles(unsigned int viewCount,
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::RenderScene(int eyeIndex) {
-    // TODO: adapt from CMainApplication
+    // Render each cube
+    /*for (const sample::Cube* cube : cubes) {
+        // Compute and update the model transform for each cube, transpose for shader usage.
+        CubeShader::ModelConstantBuffer model;
+        const DirectX::XMMATRIX scaleMatrix = DirectX::XMMatrixScaling(cube->Scale.x, cube->Scale.y, cube->Scale.z);
+        DirectX::XMStoreFloat4x4(&model.Model, DirectX::XMMatrixTranspose(scaleMatrix * xr::math::LoadXrPose(cube->PoseInScene)));
+        m_deviceContext->UpdateSubresource(m_modelCBuffer.get(), 0, nullptr, &model, 0, 0);
+
+        // Draw the cube.
+        m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
+    }*/
+
+    if (true /*m_bShowCubes*/) {
+        m_pCommandList->SetPipelineState(m_pScenePipelineState.get());
+
+        // Select the CBV (left or right eye)
+        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        cbvHandle.Offset(eyeIndex, m_nCBVSRVDescriptorSize);
+        m_pCommandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
+        // SRV is just after the left eye
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        srvHandle.Offset(SRV_TEXTURE_MAP, m_nCBVSRVDescriptorSize);
+        m_pCommandList->SetGraphicsRootDescriptorTable(1, srvHandle);
+
+        // Update the persistently mapped pointer to the CB data with the latest matrix
+        // memcpy(m_pSceneConstantBufferData[eyeIndex], GetCurrentViewProjectionMatrix(eyeIndex).get(), sizeof(Matrix4));
+
+        // Draw
+        m_pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        m_pCommandList->IASetVertexBuffers(0, 1, &m_sceneVertexBufferView);
+        m_pCommandList->DrawInstanced(m_uiVertcount, 1, 0, 0);
+    }
 
     return true;
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect,
+                                       const float renderTargetClearColor[4],
                                        ID3D12Resource* colorTexture,
                                        ID3D12Resource* depthTexture,
                                        CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
@@ -614,8 +673,8 @@ bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect,
 
     m_pCommandList->OMSetRenderTargets(1, &colorHandle, FALSE, &depthHandle);
 
-    //const float clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
-    m_debugClearColor = m_debugClearColor * 0.9f + Eigen::Vector4f{1.0f, 0.0f, 0.0f, 1.0f} * 0.1f;
+    // const float clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
+    m_debugClearColor = m_debugClearColor * 0.9f + Eigen::Vector4f(renderTargetClearColor) * 0.1f;
     m_pCommandList->ClearRenderTargetView(colorHandle, m_debugClearColor.data(), 0, nullptr);
     m_pCommandList->ClearDepthStencilView(depthHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0, nullptr);
 
@@ -623,13 +682,16 @@ bool GraphicsCore::RenderStereoTargets(const XrRect2Di& imageRect,
 
     // Transition to SHADER_RESOURCE to submit to SteamVR
     m_pCommandList->ResourceBarrier(1,
-                                    &CD3DX12_RESOURCE_BARRIER::Transition(colorTexture,
-                                                                          D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                                    &CD3DX12_RESOURCE_BARRIER::Transition(
+                                        colorTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
-    return true; 
+    return true;
 }
 
+int GraphicsCore::m_actualSwapchainLength = GraphicsCore::m_maxSwapchainLength;
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 void GraphicsCore::RenderView(const XrRect2Di& imageRect,
                               const float renderTargetClearColor[4],
                               const std::vector<xr::math::ViewProjection>& viewProjections,
@@ -640,9 +702,12 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
                               const std::vector<const sample::Cube*>& cubes,
                               CD3DX12_CPU_DESCRIPTOR_HANDLE colorHandle,
                               CD3DX12_CPU_DESCRIPTOR_HANDLE depthHandle) {
-    //adapted from CMainApplication::RenderFrame
-    if (true /*hmd present*/) 
-    {
+    const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
+    CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
+              "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
+
+    // adapted from CMainApplication::RenderFrame
+    if (true /*hmd present*/) {
         m_pCommandAllocators[m_nFrameIndex]->Reset();
 
         m_pCommandList->Reset(m_pCommandAllocators[m_nFrameIndex].get(), m_pScenePipelineState.get());
@@ -651,15 +716,30 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
         ID3D12DescriptorHeap* ppHeaps[] = {m_pCBVSRVHeap.get()};
         m_pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-        //UpdateControllerAxes();
-        RenderStereoTargets(imageRect, colorTexture, depthTexture, colorHandle, depthHandle);
-        //RenderCompanionWindow();
+        CubeShader::ViewProjectionConstantBuffer viewProjectionCBufferData{};
+        for (uint32_t k = 0; k < viewInstanceCount; k++) {
+            const DirectX::XMMATRIX spaceToView = xr::math::LoadInvertedXrPose(viewProjections[k].Pose);
+            const DirectX::XMMATRIX projectionMatrix = ComposeProjectionMatrix(viewProjections[k].Fov, viewProjections[k].NearFar);
+
+            // Set view projection matrix for each view, transpose for shader usage.
+            DirectX::XMStoreFloat4x4(&viewProjectionCBufferData.ViewProjection[k],
+                                     DirectX::XMMatrixTranspose(spaceToView * projectionMatrix));
+
+            // Set view projection matrix for each view, transpose for shader usage.
+            memcpy(m_pSceneConstantBufferData[viewInstanceCount % 2],
+                   &DirectX::XMMatrixTranspose(spaceToView * projectionMatrix),
+                   sizeof(DirectX::XMMATRIX));
+        }
+
+        RenderStereoTargets(imageRect, renderTargetClearColor, colorTexture, depthTexture, colorHandle, depthHandle);
 
         m_pCommandList->Close();
 
         // Execute the command list.
         ID3D12CommandList* ppCommandLists[] = {m_pCommandList.get()};
         m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+        m_nFrameIndex = (m_nFrameIndex + 1) % m_actualSwapchainLength;
     }
     /*
     // Present
@@ -690,9 +770,6 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     UpdateHMDMatrixPose();*/
 
     //###################################################################
-    const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
-    CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
-                "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
 
     /*CD3D11_VIEWPORT viewport(
         (float)imageRect.offset.x, (float)imageRect.offset.y, (float)imageRect.extent.width, (float)imageRect.extent.height);
@@ -724,16 +801,6 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     m_deviceContext->VSSetShader(m_vertexShader.get(), nullptr, 0);
     m_deviceContext->PSSetShader(m_pixelShader.get(), nullptr, 0);*/
 
-    CubeShader::ViewProjectionConstantBuffer viewProjectionCBufferData{};
-
-    for (uint32_t k = 0; k < viewInstanceCount; k++) {
-        const DirectX::XMMATRIX spaceToView = xr::math::LoadInvertedXrPose(viewProjections[k].Pose);
-        const DirectX::XMMATRIX projectionMatrix = ComposeProjectionMatrix(viewProjections[k].Fov, viewProjections[k].NearFar);
-
-        // Set view projection matrix for each view, transpose for shader usage.
-        DirectX::XMStoreFloat4x4(&viewProjectionCBufferData.ViewProjection[k],
-                                    DirectX::XMMatrixTranspose(spaceToView * projectionMatrix));
-    }
     /*m_deviceContext->UpdateSubresource(m_viewProjectionCBuffer.get(), 0, nullptr, &viewProjectionCBufferData, 0, 0);
 
     // Set cube primitive data.
@@ -744,25 +811,19 @@ void GraphicsCore::RenderView(const XrRect2Di& imageRect,
     m_deviceContext->IASetIndexBuffer(m_cubeIndexBuffer.get(), DXGI_FORMAT_R16_UINT, 0);
     m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_deviceContext->IASetInputLayout(m_inputLayout.get());*/
-
-    // Render each cube
-    for (const sample::Cube* cube : cubes) {
-        // Compute and update the model transform for each cube, transpose for shader usage.
-        CubeShader::ModelConstantBuffer model;
-        const DirectX::XMMATRIX scaleMatrix = DirectX::XMMatrixScaling(cube->Scale.x, cube->Scale.y, cube->Scale.z);
-        DirectX::XMStoreFloat4x4(&model.Model, DirectX::XMMatrixTranspose(scaleMatrix * xr::math::LoadXrPose(cube->PoseInScene)));
-        //m_deviceContext->UpdateSubresource(m_modelCBuffer.get(), 0, nullptr, &model, 0, 0);
-
-        // Draw the cube.
-        //m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
-    }
 }
 
+//-----------------------------------------------------------------------------
+// Tl;dr:
+//-----------------------------------------------------------------------------
 void GraphicsCore::SetClearColor(Eigen::Vector4f& newcol) {
     m_debugClearColor = newcol;
 }
 
 namespace sample {
+    //-----------------------------------------------------------------------------
+    // Tl;dr:
+    //-----------------------------------------------------------------------------
     std::unique_ptr<sample::IGraphicsPluginD3D12> CreateGraphicsCore() {
         return std::make_unique<GraphicsCore>();
     }

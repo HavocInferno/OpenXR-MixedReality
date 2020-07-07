@@ -18,6 +18,7 @@
     <ClInclude Include="shared\lodepng.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="GraphicsPluginD3D12.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
