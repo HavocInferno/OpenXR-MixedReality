@@ -170,12 +170,9 @@ private:
 
     // D3D resource setup functions
     bool InitializeD3DResources();
-    bool InitializeD3DResources2(); 
 
     bool SetupTexturemaps();
     bool SetupScene();
-    bool SetupCameras();
-    bool SetupStereoRenderTargets();
     bool SetupRenderModels();
 
     bool GenMipMapRGBA(const UINT8* pSrc, UINT8** ppDst, int nSrcWidth, int nSrcHeight, int* pDstWidthOut, int* pDstHeightOut); 

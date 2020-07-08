@@ -101,32 +101,6 @@ bool GraphicsCore::InitializeD3DResources() {
         return false;
     }
 
-    // Create the swapchain //TODO: exclude companion window items for now
-    /*DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = g_nFrameCount;
-    swapChainDesc.Width = m_nCompanionWindowWidth;
-    swapChainDesc.Height = m_nCompanionWindowHeight;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;*/
-
-    // Determine the HWND from SDL //TODO: exclude companion window items for now
-    /*struct SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(m_pCompanionWindow, &wmInfo);
-    HWND hWnd = wmInfo.info.win.window;
-
-    ComPtr<IDXGISwapChain1> pSwapChain;
-    if (FAILED(pFactory->CreateSwapChainForHwnd(m_pCommandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &pSwapChain))) {
-        dprintf("Failed to create DXGI swapchain.\n");
-        return false;
-    }
-
-    pFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
-    pSwapChain.As(&m_pSwapChain);
-    m_nFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();*/
-
     // Create descriptor heaps
     {
         m_nRTVDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -158,17 +132,6 @@ bool GraphicsCore::InitializeD3DResources() {
             sample::dx::dprintf("Failed to create command allocators.\n");
             return false;
         }
-
-        // TODO: exclude companion window items for now
-        /*
-        // Create swapchain render targets
-        m_pSwapChain->GetBuffer(nFrame, IID_PPV_ARGS(&m_pSwapChainRenderTarget[nFrame]));
-
-        // Create swapchain render target views
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart());
-        rtvHandle.Offset(RTV_SWAPCHAIN0 + nFrame, m_nRTVDescriptorSize);
-        m_pDevice->CreateRenderTargetView(m_pSwapChainRenderTarget[nFrame].Get(), nullptr, rtvHandle);
-        */
     }
 
     // Create constant buffer
@@ -227,37 +190,8 @@ bool GraphicsCore::InitializeD3DResources() {
                                  m_pScenePipelineState.get(),
                                  IID_PPV_ARGS(m_pCommandList.put()));
 
-    /*SetupTexturemaps();
-    SetupScene();
-    //SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
-    HelloVR's variant of getting view projection matrices SetupStereoRenderTargets(renderresc);
-    //SetupCompanionWindow(); //TODO: exclude companion window items for now
-    SetupRenderModels();
-
-    // Do any work that was queued up during loading
-    m_pCommandList->Close();
-    ID3D12CommandList* ppCommandLists[] = {m_pCommandList.get()};
-    m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-    // Wait for it to finish
-    m_pCommandQueue->Signal(m_pFence.get(), m_nFenceValues[m_nFrameIndex]);
-    m_pFence->SetEventOnCompletion(m_nFenceValues[m_nFrameIndex], m_fenceEvent);
-    WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-    m_nFenceValues[m_nFrameIndex]++;*/
-
-    InitializeD3DResources2();
-
-    return true;
-}
-
-//-----------------------------------------------------------------------------
-// Tl;dr:
-//-----------------------------------------------------------------------------
-bool GraphicsCore::InitializeD3DResources2() {
     SetupTexturemaps();
     SetupScene();
-    // SetupCameras();   //ImplementOpenXrProgram::RenderLayer l. 780ff queries updated viewProjections from OpenXR, may be able to skip
-    // HelloVR's variant of getting view projection matrices SetupStereoRenderTargets(); SetupCompanionWindow(); //TODO: exclude companion
     // window items for now
     SetupRenderModels();
 
